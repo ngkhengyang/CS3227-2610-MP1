@@ -1,0 +1,36 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+}
+
+group = 'degreeprogress'
+version = '0.1.0-SNAPSHOT'
+description = 'Editable degree-progress tracker for NUS Computing students'
+
+repositories {
+    mavenCentral()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 25
+}
+
+javafx {
+    version = '21.0.8'
+    modules = ['javafx.controls']
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.12.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+application {
+    mainClass = 'degreeprogress.Launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
