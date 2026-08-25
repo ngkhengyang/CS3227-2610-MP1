@@ -1,43 +1,51 @@
 package degreeprogress.modules;
 
-import java.util.Locale;
-import java.util.Objects;
-
 /**
  * A module recorded by the student.
  *
- * <p>Requirement evaluation only considers completed modules. The level is
- * stored explicitly so that selectors do not need to infer it from a module
- * code, while the convenience constructor derives the usual level from the
- * first digit in the code.</p>
+ * <p>Requirement evaluation only considers completed modules. The module
+ * level and prefix are derived from the module code and are not stored as
+ * independent values.</p>
  */
 public final class Module {
-    private final String code;
+    private final ModuleCode code;
     private final int units;
-    private final int level;
     private boolean completed;
 
     public Module(String code, int units, boolean completed) {
-        this(code, units, inferLevel(code), completed);
+        this(new ModuleCode(code), units, completed);
     }
 
-    public Module(String code, int units, int level, boolean completed) {
-        if (code == null || code.isBlank()) {
-            throw new IllegalArgumentException("Module code must not be blank");
+    /** Creates a module from an already-normalised module code value. */
+    public Module(ModuleCode code, int units, boolean completed) {
+        if (code == null) {
+            throw new IllegalArgumentException("Module code must be provided");
         }
         if (units <= 0) {
             throw new IllegalArgumentException("Module units must be positive");
         }
-        if (level < 0) {
-            throw new IllegalArgumentException("Module level must not be negative");
-        }
-        this.code = code.trim().toUpperCase(Locale.ROOT);
+        this.code = code;
         this.units = units;
-        this.level = level;
         this.completed = completed;
     }
 
+    /**
+     * Compatibility constructor for callers that previously supplied a
+     * level. The supplied value must agree with the value derived from code;
+     * it is not stored.
+     */
+    public Module(String code, int units, int level, boolean completed) {
+        this(code, units, completed);
+        if (level != getLevel()) {
+            throw new IllegalArgumentException("Module level must match the module code");
+        }
+    }
+
     public String getCode() {
+        return code.value();
+    }
+
+    public ModuleCode getModuleCode() {
         return code;
     }
 
@@ -46,7 +54,15 @@ public final class Module {
     }
 
     public int getLevel() {
-        return level;
+        return code.getLevel();
+    }
+
+    public String getPrefix() {
+        return code.getPrefix();
+    }
+
+    public boolean hasPrefix(String prefix) {
+        return code.startsWith(prefix);
     }
 
     public boolean isCompleted() {
@@ -57,14 +73,19 @@ public final class Module {
         this.completed = completed;
     }
 
-    private static int inferLevel(String code) {
-        Objects.requireNonNull(code, "code");
-        for (int index = 0; index < code.length(); index++) {
-            char character = code.charAt(index);
-            if (Character.isDigit(character)) {
-                return (character - '0') * 1000;
-            }
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
         }
-        throw new IllegalArgumentException("Module code must contain a level digit");
+        if (!(other instanceof Module module)) {
+            return false;
+        }
+        return code.equals(module.code);
+    }
+
+    @Override
+    public int hashCode() {
+        return code.hashCode();
     }
 }

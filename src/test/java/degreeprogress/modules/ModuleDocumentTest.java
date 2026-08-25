@@ -1,0 +1,42 @@
+package degreeprogress.modules;
+
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+class ModuleDocumentTest {
+    @Test
+    void documentFindsModulesByCaseInsensitiveCode() {
+        Module module = new Module("CP3880", 4, false);
+        ModuleDocument document = new ModuleDocument(1, List.of(module));
+
+        assertEquals(module, document.findByCode("cp3880").orElseThrow());
+        assertTrue(document.containsCode("CP3880"));
+        assertFalse(document.containsCode("CS2040"));
+    }
+
+    @Test
+    void documentRejectsDuplicateModuleCodes() {
+        Module first = new Module("CS2040", 4, false);
+        Module duplicate = new Module("cs2040", 4, true);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> new ModuleDocument(1, List.of(first, duplicate)));
+    }
+
+    @Test
+    void documentDefensivelyCopiesModuleList() {
+        List<Module> modules = new java.util.ArrayList<>();
+        modules.add(new Module("CS2040", 4, false));
+        ModuleDocument document = new ModuleDocument(1, modules);
+
+        modules.clear();
+
+        assertEquals(1, document.modules().size());
+    }
+}
