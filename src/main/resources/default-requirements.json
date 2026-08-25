@@ -1,0 +1,321 @@
+{
+  "schemaVersion": 1,
+  "programme": {
+    "id": "bcomp-cs",
+    "name": "Bachelor of Computing (Honours) in Computer Science",
+    "cohort": "AY2026-27",
+    "totalUnits": 160,
+    "focusAreas": [
+      "Artificial Intelligence",
+      "Software Engineering"
+    ]
+  },
+  "sources": [
+    "https://www.comp.nus.edu.sg/programmes/ug/cs/curr/",
+    "https://www.comp.nus.edu.sg/cug/soc-22-23/",
+    "https://www.comp.nus.edu.sg/programmes/ug/focus/",
+    "https://www.nus.edu.sg/registrar/academic-information-policies/undergraduate-students/general-education/list-of-courses-approved-under-the-ge-pillars"
+  ],
+  "requirements": [
+    {
+      "type": "allOf",
+      "id": "bcomp-cs-degree",
+      "name": "BComp (Computer Science)",
+      "description": "The degree requires at least 160 units.",
+      "children": [
+        {
+          "type": "allOf",
+          "id": "common-curriculum",
+          "name": "Common Curriculum",
+          "description": "40 units consisting of six ULR pillars, Computing Ethics, and ID/CD education.",
+          "children": [
+            {
+              "type": "allOf",
+              "id": "university-level-requirements",
+              "name": "University Level Requirements",
+              "description": "Six pillars, 4 units each.",
+              "children": [
+                {
+                  "type": "module",
+                  "id": "ge-cultures-connections",
+                  "name": "Cultures and Connections",
+                  "description": "Sample approved course; users may replace it with another approved GEC course.",
+                  "moduleCodes": ["GEC1000"]
+                },
+                {
+                  "type": "module",
+                  "id": "ge-critique-expression",
+                  "name": "Critique and Expression",
+                  "description": "CS prescribed course ES2660.",
+                  "moduleCodes": ["ES2660"]
+                },
+                {
+                  "type": "module",
+                  "id": "ge-data-literacy",
+                  "name": "Data Literacy",
+                  "description": "Sample approved course; users may replace it with another approved course.",
+                  "moduleCodes": ["GEA1000"]
+                },
+                {
+                  "type": "module",
+                  "id": "ge-digital-literacy",
+                  "name": "Digital Literacy",
+                  "description": "CS prescribed programming methodology course.",
+                  "moduleCodes": ["CS1101S"]
+                },
+                {
+                  "type": "module",
+                  "id": "ge-singapore-studies",
+                  "name": "Singapore Studies",
+                  "description": "Sample approved course; users may replace it with another approved GESS course.",
+                  "moduleCodes": ["GESS1000"]
+                },
+                {
+                  "type": "module",
+                  "id": "ge-communities-engagement",
+                  "name": "Communities and Engagement",
+                  "description": "Sample approved course; users may replace it with another approved GEN course.",
+                  "moduleCodes": ["GEN2000"]
+                }
+              ]
+            },
+            {
+              "type": "module",
+              "id": "computing-ethics",
+              "name": "Computing Ethics",
+              "description": "All students take IS1108 Digital and AI Ethics.",
+              "moduleCodes": ["IS1108"]
+            },
+            {
+              "type": "allOf",
+              "id": "id-cd-education",
+              "name": "Interdisciplinary and Cross-Disciplinary Education",
+              "description": "Complete 12 units, including at least two ID courses and no more than one CD course.",
+              "children": [
+                {
+                  "type": "unitCount",
+                  "id": "id-cd-total-units",
+                  "name": "ID/CD total",
+                  "description": "Sample ID and CD course pool.",
+                  "selector": {
+                    "moduleCodes": ["DTK1234", "IS1128", "HSH1000", "DAO2703", "MNO1706X", "SC1101E"]
+                  },
+                  "minimumUnits": 12,
+                  "maximumUnits": 12
+                },
+                {
+                  "type": "moduleCount",
+                  "id": "id-course-count",
+                  "name": "At least two ID courses",
+                  "selector": {
+                    "moduleCodes": ["DTK1234", "IS1128", "HSH1000"]
+                  },
+                  "minimumModules": 2
+                },
+                {
+                  "type": "moduleCount",
+                  "id": "cd-course-count",
+                  "name": "At most one CD course",
+                  "selector": {
+                    "moduleCodes": ["DAO2703", "MNO1706X", "SC1101E"]
+                  },
+                  "minimumModules": 0,
+                  "maximumModules": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "allOf",
+          "id": "programme-requirements",
+          "name": "Programme Requirements",
+          "description": "80 units consisting of foundation, breadth and depth, and mathematics and sciences.",
+          "children": [
+            {
+              "type": "module",
+              "id": "cs-foundation",
+              "name": "Computer Science Foundation",
+              "moduleCodes": [
+                "CS1231S",
+                "CS2030S",
+                "CS2040S",
+                "CS2100",
+                "CS2101",
+                "CS2103T",
+                "CS2106",
+                "CS2109S",
+                "CS3230"
+              ]
+            },
+            {
+              "type": "allOf",
+              "id": "cs-breadth-depth",
+              "name": "Computer Science Breadth and Depth",
+              "description": "The sample models AI and Software Engineering focus areas.",
+              "children": [
+                {
+                  "type": "unitCount",
+                  "id": "breadth-depth-total",
+                  "name": "Computing breadth and depth units",
+                  "selector": {
+                    "codePrefixes": ["CS", "IFS", "CP"]
+                  },
+                  "minimumUnits": 32
+                },
+                {
+                  "type": "unitCount",
+                  "id": "breadth-depth-level-4000",
+                  "name": "Level-4000-and-above units",
+                  "selector": {
+                    "codePrefixes": ["CS", "IFS", "CP"],
+                    "minimumLevel": 4000
+                  },
+                  "minimumUnits": 12
+                },
+                {
+                  "type": "unitCount",
+                  "id": "industry-experience-units",
+                  "name": "Industry Experience",
+                  "selector": {
+                    "moduleCodes": [
+                      "CP3880",
+                      "IS4010",
+                      "ETP3201L",
+                      "CP3200",
+                      "CP3202",
+                      "CP3107",
+                      "CP3110",
+                      "ETP3205"
+                    ]
+                  },
+                  "minimumUnits": 6,
+                  "maximumUnits": 12
+                },
+                {
+                  "type": "unitCount",
+                  "id": "cp-coded-limit",
+                  "name": "Non-industry CP-coded limit",
+                  "description": "At most 12 CP-coded units, excluding Industry Experience. The current selector cannot yet exclude another requirement pool.",
+                  "selector": {
+                    "codePrefixes": ["CP"]
+                  },
+                  "minimumUnits": 0,
+                  "maximumUnits": 12
+                },
+                {
+                  "type": "allOf",
+                  "id": "artificial-intelligence-focus",
+                  "name": "Artificial Intelligence Focus Area",
+                  "children": [
+                    {
+                      "type": "moduleCount",
+                      "id": "ai-focus-primary-count",
+                      "name": "Three AI Area Primary courses",
+                      "selector": {
+                        "moduleCodes": [
+                          "CS2109S",
+                          "CS3243",
+                          "CS3244",
+                          "CS3263",
+                          "CS3264",
+                          "CS3268",
+                          "CS4243",
+                          "CS4244",
+                          "CS4246",
+                          "CS4248",
+                          "CS4262",
+                          "CS4263"
+                        ]
+                      },
+                      "minimumModules": 3
+                    },
+                    {
+                      "type": "moduleCount",
+                      "id": "ai-focus-level-4000",
+                      "name": "One level-4000 AI course",
+                      "selector": {
+                        "moduleCodes": [
+                          "CS4243",
+                          "CS4244",
+                          "CS4246",
+                          "CS4248",
+                          "CS4262",
+                          "CS4263"
+                        ],
+                        "minimumLevel": 4000
+                      },
+                      "minimumModules": 1
+                    }
+                  ]
+                },
+                {
+                  "type": "allOf",
+                  "id": "software-engineering-focus",
+                  "name": "Software Engineering Focus Area",
+                  "children": [
+                    {
+                      "type": "moduleCount",
+                      "id": "se-focus-primary-count",
+                      "name": "Three Software Engineering Area Primary courses",
+                      "selector": {
+                        "moduleCodes": [
+                          "CS2103T",
+                          "CS3213",
+                          "CS3217",
+                          "CS3219",
+                          "CS3227",
+                          "CS3282",
+                          "CS4211",
+                          "CS4218",
+                          "CS4239"
+                        ]
+                      },
+                      "minimumModules": 3
+                    },
+                    {
+                      "type": "moduleCount",
+                      "id": "se-focus-level-4000",
+                      "name": "One level-4000 Software Engineering course",
+                      "selector": {
+                        "moduleCodes": [
+                          "CS4211",
+                          "CS4218",
+                          "CS4239"
+                        ],
+                        "minimumLevel": 4000
+                      },
+                      "minimumModules": 1
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "module",
+              "id": "mathematics-and-sciences",
+              "name": "Mathematics and Sciences",
+              "moduleCodes": ["MA1521", "MA1522", "ST2334"]
+            }
+          ]
+        },
+        {
+          "type": "unitCount",
+          "id": "unrestricted-electives",
+          "name": "Unrestricted Electives",
+          "description": "At least 40 units. The first iteration treats allocation to this pool as a future manual-allocation feature.",
+          "selector": {},
+          "minimumUnits": 40
+        },
+        {
+          "type": "unitCount",
+          "id": "degree-total",
+          "name": "Degree Total",
+          "description": "At least 160 completed units overall.",
+          "selector": {},
+          "minimumUnits": 160
+        }
+      ]
+    }
+  ]
+}
