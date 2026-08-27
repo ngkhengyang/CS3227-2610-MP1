@@ -45,4 +45,26 @@ class ModuleTest {
         assertThrows(IllegalArgumentException.class, () -> new ModuleCode("   "));
         assertThrows(IllegalArgumentException.class, () -> new ModuleCode("CS2040").startsWith(" "));
     }
+
+    @Test
+    void moduleRequiresANonBlankName() {
+        assertThrows(IllegalArgumentException.class, () -> new Module("CS2040", "", 4));
+        assertThrows(IllegalArgumentException.class, () -> new Module("CS2040", "   ", 4));
+    }
+
+    @Test
+    void moduleUnitsIncludeBothValidBoundaries() {
+        assertEquals(1, new Module("CS1010", "Introduction to Computing", 1).getUnits());
+        assertEquals(60, new Module("CS6000", "Advanced Computing", 60).getUnits());
+    }
+
+    @Test
+    void moduleRejectsUnitsOutsideTheValidRange() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new Module("CS1010", "Introduction to Computing", 0));
+        assertThrows(IllegalArgumentException.class,
+                () -> new Module("CS1010", "Introduction to Computing", -1));
+        assertThrows(IllegalArgumentException.class,
+                () -> new Module("CS1010", "Introduction to Computing", 61));
+    }
 }

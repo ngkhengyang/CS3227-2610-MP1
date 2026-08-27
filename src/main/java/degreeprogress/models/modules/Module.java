@@ -8,23 +8,42 @@ package degreeprogress.models.modules;
  * independent values.</p>
  */
 public final class Module {
+    private static final int MIN_UNITS = 1;
+    private static final int MAX_UNITS = 60;
+
     private final ModuleCode code;
+    private final String name;
     private final int units;
     private boolean completed;
 
+    /** Creates an incomplete module with the supplied basic details. */
+    public Module(String code, String name, int units) {
+        this(new ModuleCode(code), name, units, false);
+    }
+
     public Module(String code, int units, boolean completed) {
-        this(new ModuleCode(code), units, completed);
+        this(new ModuleCode(code), code, units, completed);
     }
 
     /** Creates a module from an already-normalised module code value. */
     public Module(ModuleCode code, int units, boolean completed) {
+        this(code, code == null ? null : code.value(), units, completed);
+    }
+
+    /** Creates a module from an already-normalised module code value. */
+    public Module(ModuleCode code, String name, int units, boolean completed) {
         if (code == null) {
             throw new IllegalArgumentException("Module code must be provided");
         }
-        if (units <= 0) {
-            throw new IllegalArgumentException("Module units must be positive");
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Module name must be provided");
+        }
+        if (units < MIN_UNITS || units > MAX_UNITS) {
+            throw new IllegalArgumentException("Module units must be from "
+                    + MIN_UNITS + " and " + MAX_UNITS);
         }
         this.code = code;
+        this.name = name.trim();
         this.units = units;
         this.completed = completed;
     }
@@ -43,6 +62,10 @@ public final class Module {
 
     public String getCode() {
         return code.value();
+    }
+
+    public String getName() {
+        return name;
     }
 
     public ModuleCode getModuleCode() {
