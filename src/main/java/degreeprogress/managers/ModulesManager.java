@@ -75,6 +75,26 @@ public final class ModulesManager {
         return editedModule;
     }
 
+    /** Marks the module identified by its code as completed in place. */
+    public Module markModuleCompleted(String code) {
+        ModuleCode moduleCode = new ModuleCode(code);
+        Module module = findModule(moduleCode)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No module exists with this code: " + moduleCode.value()));
+        module.setCompleted(true);
+        return module;
+    }
+
+    /** Marks the module identified by its code as uncompleted in place. */
+    public Module markModuleUncompleted(String code) {
+        ModuleCode moduleCode = new ModuleCode(code);
+        Module module = findModule(moduleCode)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No module exists with this code: " + moduleCode.value()));
+        module.setCompleted(false);
+        return module;
+    }
+    
     /** Deletes the module identified by its code. */
     public Module deleteModule(String code) {
         ModuleCode moduleCode = new ModuleCode(code);

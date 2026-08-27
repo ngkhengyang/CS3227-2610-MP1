@@ -7,10 +7,21 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ModulesManagerTest {
+    @Test
+    void presetConstructorRejectsNullAndDuplicateModules() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new ModulesManager(null));
+        assertThrows(IllegalArgumentException.class,
+                () -> new ModulesManager(List.of(
+                        new Module("CS2040S", "Data Structures", 4),
+                        new Module("cs2040s", "Duplicate", 4))));
+    }
+        
     @Test
     void addModuleStoresRequiredDetailsAndDefaultsToIncomplete() {
         ModulesManager manager = new ModulesManager();
@@ -125,12 +136,59 @@ class ModulesManagerTest {
     }
 
     @Test
-    void presetConstructorRejectsNullAndDuplicateModules() {
+    void markModuleCompleted() {
+        Module first = new Module("CS1010", "Introduction to Computing", 4);
+        Module second = new Module("CS2040S", "Data Structures", 4);
+        Module third = new Module("CS2100", "Computer Organisation", 4);
+        ModulesManager manager = new ModulesManager(List.of(first, second, third));
+
+        Module marked = manager.markModuleCompleted("cs2040s");
+        List<Module> modules = manager.getModules();
+
+        assertTrue(marked.isCompleted());
+        assertSame(second, marked);
+        // Should not change the order of modules in the list
+        assertSame(first, modules.get(0));
+        assertSame(second, modules.get(1));
+        assertSame(third, modules.get(2));
+    }
+
+    @Test
+    void markModuleCompletedRejectsUnknownCodes() {
+        ModulesManager manager = new ModulesManager(List.of(
+                new Module("CS2040S", "Data Structures", 4)));
+
         assertThrows(IllegalArgumentException.class,
-                () -> new ModulesManager(null));
+                () -> manager.markModuleCompleted("CS1231S"));
+    }
+
+    @Test
+    void markModuleUncompleted() {
+        Module first = new Module("CS1010", "Introduction to Computing", 4);
+        Module second = new Module("CS2040S", "Data Structures", 4);
+        Module third = new Module("CS2100", "Computer Organisation", 4);
+        first.setCompleted(true);
+        second.setCompleted(true);
+        third.setCompleted(true);
+        ModulesManager manager = new ModulesManager(List.of(first, second, third));
+
+        Module marked = manager.markModuleUncompleted("cs2040s");
+        List<Module> modules = manager.getModules();
+
+        assertFalse(marked.isCompleted());
+        assertSame(second, marked);
+        // Should not change the order of modules in the list
+        assertSame(first, modules.get(0));
+        assertSame(second, modules.get(1));
+        assertSame(third, modules.get(2));
+    }
+
+    @Test
+    void markModuleUncompletedRejectsUnknownCodes() {
+        ModulesManager manager = new ModulesManager(List.of(
+                new Module("CS2040S", "Data Structures", 4)));
+
         assertThrows(IllegalArgumentException.class,
-                () -> new ModulesManager(List.of(
-                        new Module("CS2040S", "Data Structures", 4),
-                        new Module("cs2040s", "Duplicate", 4))));
+                () -> manager.markModuleUncompleted("CS1231S"));
     }
 }
