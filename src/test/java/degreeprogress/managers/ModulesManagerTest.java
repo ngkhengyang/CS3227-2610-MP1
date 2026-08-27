@@ -1,10 +1,14 @@
 package degreeprogress.managers;
 
+import degreeprogress.models.modules.Module;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ModulesManagerTest {
     @Test
@@ -22,8 +26,8 @@ class ModulesManagerTest {
 
     @Test
     void deleteModuleRemovesModuleByCode() {
-        ModulesManager manager = new ModulesManager();
-        manager.addModule("CS2040S", "Data Structures and Algorithms", 4);
+        ModulesManager manager = new ModulesManager(List.of(
+                new Module("CS2040S", "Data Structures and Algorithms", 4)));
 
         manager.deleteModule("cs2040s");
 
@@ -32,8 +36,9 @@ class ModulesManagerTest {
 
     @Test
     void duplicateAndUnknownCodesAreRejected() {
-        ModulesManager manager = new ModulesManager();
-        manager.addModule("CS2040S", "Data Structures and Algorithms", 4);
+        ModulesManager manager = new ModulesManager(List.of(
+                new Module("CS2040S", "Data Structures and Algorithms", 4),
+                new Module("CS2100", "Computer Organisation", 4)));
 
         assertThrows(IllegalArgumentException.class,
                 () -> manager.addModule("cs2040s", "Duplicate", 4));
@@ -72,5 +77,60 @@ class ModulesManagerTest {
 
         assertEquals(1, manager.getModules().get(0).getUnits());
         assertEquals(60, manager.getModules().get(1).getUnits());
+    }
+
+    @Test
+    void editModuleUpdatesDetailsAndPreservesCompletionState() {
+        Module completedModule = new Module("CS2040S", "Data Structures", 4);
+        completedModule.setCompleted(true);
+        ModulesManager manager = new ModulesManager(List.of(completedModule));
+
+        Module edited = manager.editModule(
+                "cs2040s", "Computer Systems", 8);
+
+        assertEquals("CS2040S", edited.getCode());
+        assertEquals("Computer Systems", edited.getName());
+        assertEquals(8, edited.getUnits());
+        assertTrue(edited.isCompleted());
+    }
+
+    @Test
+    void editModuleCanChangeCodeAndNormalisesIt() {
+        ModulesManager manager = new ModulesManager(List.of(
+                new Module("CS2040S", "Data Structures", 4)));
+
+        manager.editModule("CS2040S", " cp2106 ", "Software Engineering", 1);
+
+        assertEquals("CP2106", manager.getModules().get(0).getCode());
+        assertEquals("Software Engineering", manager.getModules().get(0).getName());
+        assertEquals(1, manager.getModules().get(0).getUnits());
+    }
+
+    @Test
+    void editModuleRejectsUnknownOrDuplicateCodesAndInvalidDetails() {
+        ModulesManager manager = new ModulesManager(List.of(
+                new Module("CS2040S", "Data Structures", 4),
+                new Module("CS2100", "Computer Organisation", 4)));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> manager.editModule("CS1231S", "CS1231S", "Renamed", 4));
+        assertThrows(IllegalArgumentException.class,
+                () -> manager.editModule("CS2040S", "CS2100", "Duplicate code", 4));
+        assertThrows(IllegalArgumentException.class,
+                () -> manager.editModule("CS2040S", "", 4));
+        assertThrows(IllegalArgumentException.class,
+                () -> manager.editModule("CS2040S", "Renamed", 0));
+        assertThrows(IllegalArgumentException.class,
+                () -> manager.editModule("CS2040S", "Renamed", 61));
+    }
+
+    @Test
+    void presetConstructorRejectsNullAndDuplicateModules() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new ModulesManager(null));
+        assertThrows(IllegalArgumentException.class,
+                () -> new ModulesManager(List.of(
+                        new Module("CS2040S", "Data Structures", 4),
+                        new Module("cs2040s", "Duplicate", 4))));
     }
 }

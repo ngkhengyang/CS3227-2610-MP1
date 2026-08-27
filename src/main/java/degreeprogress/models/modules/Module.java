@@ -39,7 +39,7 @@ public final class Module {
             throw new IllegalArgumentException("Module name must be provided");
         }
         if (units < MIN_UNITS || units > MAX_UNITS) {
-            throw new IllegalArgumentException("Module units must be from "
+            throw new IllegalArgumentException("Module units must be between "
                     + MIN_UNITS + " and " + MAX_UNITS);
         }
         this.code = code;
