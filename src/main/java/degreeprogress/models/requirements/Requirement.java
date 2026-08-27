@@ -1,6 +1,6 @@
-package degreeprogress.requirements;
+package degreeprogress.models.requirements;
 
-import degreeprogress.modules.Module;
+import degreeprogress.models.modules.Module;
 
 import java.util.Collection;
 import java.util.List;

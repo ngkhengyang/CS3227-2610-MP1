@@ -1,4 +1,4 @@
-package degreeprogress.modules;
+package degreeprogress.models.modules;
 
 import java.util.HashSet;
 import java.util.List;

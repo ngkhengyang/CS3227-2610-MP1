@@ -54,10 +54,18 @@ On macOS or Linux, use `./gradlew` instead of `gradlew.bat`.
 src/
   main/
     java/degreeprogress/
-      Launcher.java       # Java entry point
-      DegreeProgressApp.java # JavaFX application entry point
+      gui/                 # JavaFX application and entry point
+      models/
+        modules/            # Module data models
+        requirements/       # Requirement data models
+      storage/             # Persistence and JSON conversion
     resources/
       application.properties
+      default-requirements.json
+  test/
+    java/degreeprogress/
+      models/              # Domain model tests
+      storage/             # Persistence tests
 docs/                     # User and developer documentation
 logs/                     # AI-assisted development and reflection logs
 build.gradle              # Gradle build configuration

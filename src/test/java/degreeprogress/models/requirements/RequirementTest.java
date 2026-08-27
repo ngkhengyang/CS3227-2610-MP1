@@ -1,6 +1,6 @@
-package degreeprogress.requirements;
+package degreeprogress.models.requirements;
 
-import degreeprogress.modules.Module;
+import degreeprogress.models.modules.Module;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

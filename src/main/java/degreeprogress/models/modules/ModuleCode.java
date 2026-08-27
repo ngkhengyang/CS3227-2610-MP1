@@ -1,4 +1,4 @@
-package degreeprogress.modules;
+package degreeprogress.models.modules;
 
 import java.util.Locale;
 import java.util.Objects;

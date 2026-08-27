@@ -1,4 +1,4 @@
-package degreeprogress;
+package degreeprogress.gui;
 
 /**
  * Application launcher kept separate from the JavaFX {@code Application} class
@@ -12,4 +12,3 @@ public final class Launcher {
         DegreeProgressApp.launch(DegreeProgressApp.class, args);
     }
 }
-

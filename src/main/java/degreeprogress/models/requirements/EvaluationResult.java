@@ -1,4 +1,4 @@
-package degreeprogress.requirements;
+package degreeprogress.models.requirements;
 
 import java.util.List;
 

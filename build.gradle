@@ -29,7 +29,7 @@ dependencies {
 }
 
 application {
-    mainClass = 'degreeprogress.Launcher'
+    mainClass = 'degreeprogress.gui.Launcher'
 }
 
 tasks.named('test') {

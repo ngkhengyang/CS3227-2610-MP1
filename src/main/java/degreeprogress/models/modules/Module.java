@@ -1,4 +1,4 @@
-package degreeprogress.modules;
+package degreeprogress.models.modules;
 
 /**
  * A module recorded by the student.

@@ -1,11 +1,13 @@
 package degreeprogress.storage;
 
-import degreeprogress.requirements.AllOfRequirement;
-import degreeprogress.requirements.AnyOfRequirement;
-import degreeprogress.requirements.ModuleCountRequirement;
-import degreeprogress.requirements.ModuleRequirement;
-import degreeprogress.requirements.Requirement;
-import degreeprogress.requirements.UnitCountRequirement;
+import degreeprogress.models.requirements.AllOfRequirement;
+import degreeprogress.models.requirements.AnyOfRequirement;
+import degreeprogress.models.requirements.ModuleCountRequirement;
+import degreeprogress.models.requirements.ModuleRequirement;
+import degreeprogress.models.requirements.ProgrammeInfo;
+import degreeprogress.models.requirements.Requirement;
+import degreeprogress.models.requirements.RequirementDocument;
+import degreeprogress.models.requirements.UnitCountRequirement;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

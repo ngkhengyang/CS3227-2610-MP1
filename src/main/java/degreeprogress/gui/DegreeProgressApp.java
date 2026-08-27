@@ -1,4 +1,4 @@
-package degreeprogress;
+package degreeprogress.gui;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -28,4 +28,3 @@ public final class DegreeProgressApp extends Application {
         stage.show();
     }
 }
-

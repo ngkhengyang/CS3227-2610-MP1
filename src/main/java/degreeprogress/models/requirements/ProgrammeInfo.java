@@ -1,4 +1,4 @@
-package degreeprogress.storage;
+package degreeprogress.models.requirements;
 
 import java.util.List;
 

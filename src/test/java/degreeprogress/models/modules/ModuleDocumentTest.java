@@ -1,4 +1,4 @@
-package degreeprogress.modules;
+package degreeprogress.models.modules;
 
 import org.junit.jupiter.api.Test;
 
