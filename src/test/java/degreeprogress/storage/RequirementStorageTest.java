@@ -24,7 +24,7 @@ class RequirementStorageTest {
     private final RequirementStorage storage = new RequirementStorage();
 
     @Test
-    void parsesAndSerialisesBundledRequirementDocument() throws IOException {
+    void parseAndSerialize_roundTripsBundledDocument() throws IOException {
         String json;
         try (InputStream input = getClass().getResourceAsStream("/default-requirements.json")) {
             if (input == null) {
@@ -48,7 +48,7 @@ class RequirementStorageTest {
     }
 
     @Test
-    void roundTripPreservesPolymorphicRequirementTypesAndFields() {
+    void serializeAndParse_preservesTypesAndFields() {
         Requirement leaves = new AllOfRequirement(
                 "root",
                 "Root",
@@ -84,7 +84,7 @@ class RequirementStorageTest {
     }
 
     @Test
-    void rejectsMalformedJsonAndUnknownRequirementTypes() {
+    void parse_rejectsMalformedJsonOrUnknownType() {
         assertThrows(IllegalArgumentException.class, () -> storage.parse("not json"));
 
         String unknownType = """

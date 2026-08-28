@@ -17,7 +17,7 @@ class RequirementTest {
     private static final Module CS4248 = new Module("CS4248", 4, 4000, false);
 
     @Test
-    void moduleRequirementRequiresEveryListedModule() {
+    void evaluate_requiresEveryListedModule() {
         Requirement requirement = new ModuleRequirement(
                 "foundation", "Foundation", "", Set.of("CS1231S", "CS2040S"));
 
@@ -31,7 +31,7 @@ class RequirementTest {
     }
 
     @Test
-    void countAndUnitRequirementsApplySelectors() {
+    void evaluate_appliesSelectors() {
         ModuleSelector cs4000 = new ModuleSelector(
                 Set.of(), Set.of("CS"), 4000, null);
         Requirement moduleCount = new ModuleCountRequirement(
@@ -45,7 +45,7 @@ class RequirementTest {
     }
 
     @Test
-    void allAndAnyRequirementsComposeChildResults() {
+    void evaluate_composesChildResults() {
         Requirement first = new ModuleRequirement("first", "First", "", Set.of("CS1231S"));
         Requirement second = new ModuleRequirement("second", "Second", "", Set.of("CS2040S"));
         Requirement all = new AllOfRequirement("all", "Both", "", List.of(first, second));
@@ -57,7 +57,7 @@ class RequirementTest {
     }
 
     @Test
-    void requirementsCanBeEditedAndChildrenCanBeChanged() {
+    void requirementEditing_updatesFieldsAndChildren() {
         ModuleRequirement requirement = new ModuleRequirement(
                 "elective", "Elective", "old", Set.of("CS1231S"));
         requirement.setName("Updated elective");
@@ -74,7 +74,7 @@ class RequirementTest {
     }
 
     @Test
-    void invalidRequirementValuesAreRejected() {
+    void constructor_rejectsInvalidValues() {
         assertThrows(IllegalArgumentException.class,
                 () -> new ModuleRequirement("id", "name", "", Set.of()));
         assertThrows(IllegalArgumentException.class,

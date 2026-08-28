@@ -13,9 +13,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ModulesManagerTest {
     @Test
-    void presetConstructorRejectsNullAndDuplicateModules() {
+    void constructor_rejectsNull() {
         assertThrows(IllegalArgumentException.class,
                 () -> new ModulesManager(null));
+    }
+
+    @Test
+    void constructor_rejectsDuplicateModules() {
         assertThrows(IllegalArgumentException.class,
                 () -> new ModulesManager(List.of(
                         new Module("CS2040S", "Data Structures", 4),
@@ -23,7 +27,7 @@ class ModulesManagerTest {
     }
         
     @Test
-    void addModuleStoresRequiredDetailsAndDefaultsToIncomplete() {
+    void addModule_storesIncompleteModule() {
         ModulesManager manager = new ModulesManager();
 
         manager.addModule(" cs2040s ", "Data Structures and Algorithms", 4);
@@ -36,7 +40,7 @@ class ModulesManagerTest {
     }
 
     @Test
-    void deleteModuleRemovesModuleByCode() {
+    void deleteModule_removesByCode() {
         ModulesManager manager = new ModulesManager(List.of(
                 new Module("CS2040S", "Data Structures and Algorithms", 4)));
 
@@ -46,7 +50,7 @@ class ModulesManagerTest {
     }
 
     @Test
-    void duplicateAndUnknownCodesAreRejected() {
+    void addModuleAndDeleteModule_rejectInvalidCodes() {
         ModulesManager manager = new ModulesManager(List.of(
                 new Module("CS2040S", "Data Structures and Algorithms", 4),
                 new Module("CS2100", "Computer Organisation", 4)));
@@ -58,7 +62,7 @@ class ModulesManagerTest {
     }
 
     @Test
-    void addModuleRejectsBlankRequiredFields() {
+    void addModule_rejectsBlankFields() {
         ModulesManager manager = new ModulesManager();
 
         assertThrows(IllegalArgumentException.class,
@@ -70,7 +74,7 @@ class ModulesManagerTest {
     }
 
     @Test
-    void addModuleRejectsUnitsOutsideOneToSixty() {
+    void addModule_rejectsInvalidUnits() {
         ModulesManager manager = new ModulesManager();
 
         assertThrows(IllegalArgumentException.class,
@@ -80,7 +84,7 @@ class ModulesManagerTest {
     }
 
     @Test
-    void addModuleAcceptsOneAndSixtyUnits() {
+    void addModule_acceptsBoundaryUnits() {
         ModulesManager manager = new ModulesManager();
 
         manager.addModule("CS1000", "One Unit Module", 1);
@@ -91,7 +95,7 @@ class ModulesManagerTest {
     }
 
     @Test
-    void editModuleUpdatesDetailsAndPreservesCompletionState() {
+    void editModule_updatesDetailsAndPreservesCompletion() {
         Module completedModule = new Module("CS2040S", "Data Structures", 4);
         completedModule.setCompleted(true);
         ModulesManager manager = new ModulesManager(List.of(completedModule));
@@ -106,7 +110,7 @@ class ModulesManagerTest {
     }
 
     @Test
-    void editModuleCanChangeCodeAndNormalisesIt() {
+    void editModule_changesAndNormalisesCode() {
         ModulesManager manager = new ModulesManager(List.of(
                 new Module("CS2040S", "Data Structures", 4)));
 
@@ -118,7 +122,7 @@ class ModulesManagerTest {
     }
 
     @Test
-    void editModuleRejectsUnknownOrDuplicateCodesAndInvalidDetails() {
+    void editModule_rejectsInvalidInput() {
         ModulesManager manager = new ModulesManager(List.of(
                 new Module("CS2040S", "Data Structures", 4),
                 new Module("CS2100", "Computer Organisation", 4)));
@@ -136,7 +140,7 @@ class ModulesManagerTest {
     }
 
     @Test
-    void markModuleCompleted() {
+    void markModuleCompleted_marksAndPreservesOrder() {
         Module first = new Module("CS1010", "Introduction to Computing", 4);
         Module second = new Module("CS2040S", "Data Structures", 4);
         Module third = new Module("CS2100", "Computer Organisation", 4);
@@ -154,7 +158,7 @@ class ModulesManagerTest {
     }
 
     @Test
-    void markModuleCompletedRejectsUnknownCodes() {
+    void markModuleCompleted_rejectsUnknownCode() {
         ModulesManager manager = new ModulesManager(List.of(
                 new Module("CS2040S", "Data Structures", 4)));
 
@@ -163,7 +167,7 @@ class ModulesManagerTest {
     }
 
     @Test
-    void markModuleUncompleted() {
+    void markModuleUncompleted_marksAndPreservesOrder() {
         Module first = new Module("CS1010", "Introduction to Computing", 4);
         Module second = new Module("CS2040S", "Data Structures", 4);
         Module third = new Module("CS2100", "Computer Organisation", 4);
@@ -184,7 +188,7 @@ class ModulesManagerTest {
     }
 
     @Test
-    void markModuleUncompletedRejectsUnknownCodes() {
+    void markModuleUncompleted_rejectsUnknownCode() {
         ModulesManager manager = new ModulesManager(List.of(
                 new Module("CS2040S", "Data Structures", 4)));
 
@@ -193,7 +197,7 @@ class ModulesManagerTest {
     }
 
     @Test
-    void searchModulesMatchesCodeSubstringsCaseInsensitively() {
+    void searchModules_matchesCodeSubstring() {
         ModulesManager manager = new ModulesManager(List.of(
                 new Module("CS2040S", "Data Structures", 4),
                 new Module("CP2106", "Independent Software Development Project", 4)));
@@ -204,7 +208,7 @@ class ModulesManagerTest {
     }
 
     @Test
-    void searchModulesMatchesTitleSubstringsCaseInsensitively() {
+    void searchModules_matchesTitleSubstring() {
         ModulesManager manager = new ModulesManager(List.of(
                 new Module("CS2040S", "Data Structures", 4),
                 new Module("CP2106", "Independent Software Development Project", 4)));
@@ -215,7 +219,7 @@ class ModulesManagerTest {
     }
 
     @Test
-    void searchModulesBlankSearch() {
+    void searchModules_acceptsBlankSearch() {
         Module first = new Module("CS2040S", "Data Structures", 4);
         Module second = new Module("CP2106", "Independent Software Development Project", 4);
         ModulesManager manager = new ModulesManager(List.of(first, second));
@@ -226,7 +230,7 @@ class ModulesManagerTest {
     }
 
     @Test
-    void searchModulesAllMatching() {
+    void searchModules_returnsMatchesAndNoMatches() {
         ModulesManager manager = new ModulesManager(List.of(
                 new Module("CS2040S", "Data Structures", 4),
                 new Module("CP2106", "Independent Software Development Project", 4),
@@ -238,7 +242,7 @@ class ModulesManagerTest {
         assertEquals(List.of(), manager.searchModules("biology"));
     }
 
-    void searchModulesNoMatches() {
+    void searchModules_noMatches() {
         ModulesManager manager = new ModulesManager(List.of(
                 new Module("CS2040S", "Data Structures", 4),
                 new Module("CP2106", "Independent Software Development Project", 4),

@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ModuleTest {
     @Test
-    void moduleCodeNormalisesAndDerivesPrefixAndLevel() {
+    void moduleConstructor_normalisesCodeAndLevel() {
         Module module = new Module(" cp3880 ", 4, false);
 
         assertEquals("CP3880", module.getCode());
@@ -20,7 +20,7 @@ class ModuleTest {
     }
 
     @Test
-    void moduleCodePreservesSuffixes() {
+    void moduleCodeConstructor_preservesSuffix() {
         ModuleCode code = new ModuleCode("cs2040s");
 
         assertEquals("CS2040S", code.value());
@@ -29,7 +29,7 @@ class ModuleTest {
     }
 
     @Test
-    void explicitLevelMustAgreeWithDerivedLevel() {
+    void moduleConstructor_validatesExplicitLevel() {
         Module module = new Module("CS2040", 4, 2000, true);
 
         assertEquals(2000, module.getLevel());
@@ -38,7 +38,7 @@ class ModuleTest {
     }
 
     @Test
-    void invalidModuleCodesAreRejected() {
+    void moduleCodeConstructor_rejectsInvalidCodes() {
         assertThrows(IllegalArgumentException.class, () -> new ModuleCode("2040"));
         assertThrows(IllegalArgumentException.class, () -> new ModuleCode("CS"));
         assertThrows(IllegalArgumentException.class, () -> new ModuleCode("C-2040"));
@@ -47,19 +47,19 @@ class ModuleTest {
     }
 
     @Test
-    void moduleRequiresANonBlankName() {
+    void moduleConstructor_rejectsBlankName() {
         assertThrows(IllegalArgumentException.class, () -> new Module("CS2040", "", 4));
         assertThrows(IllegalArgumentException.class, () -> new Module("CS2040", "   ", 4));
     }
 
     @Test
-    void moduleUnitsIncludeBothValidBoundaries() {
+    void moduleConstructor_acceptsBoundaryUnits() {
         assertEquals(1, new Module("CS1010", "Introduction to Computing", 1).getUnits());
         assertEquals(60, new Module("CS6000", "Advanced Computing", 60).getUnits());
     }
 
     @Test
-    void moduleRejectsUnitsOutsideTheValidRange() {
+    void moduleConstructor_rejectsInvalidUnits() {
         assertThrows(IllegalArgumentException.class,
                 () -> new Module("CS1010", "Introduction to Computing", 0));
         assertThrows(IllegalArgumentException.class,

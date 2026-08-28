@@ -25,6 +25,12 @@ Prerequisite checking, cohort-specific rules, what-if planning, chatbot interact
 - Required project documents: `docs/UserGuide.md`, `docs/DeveloperGuide.md`, and `docs/Reflections.md`.
 - AI-assisted development notes belong in `logs/`.
 
+## Coding conventions
+
+- Name JUnit test methods using `<Function/method name>_<test case purpose>`.
+- Keep test names concise and use lower camel case within each part, for example `addModule_invalidUnits`.
+- Preserve the separator underscore between the method name and the test purpose.
+
 ## High-level architecture
 
 Keep the application architecture simple and divided into domain models, two

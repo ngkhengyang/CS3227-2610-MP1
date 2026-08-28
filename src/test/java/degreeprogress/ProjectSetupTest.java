@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 class ProjectSetupTest {
     @Test
-    void projectBaseIsReadyForFeatureDevelopment() {
+    void projectBase_isReadyForFeatures() {
         assertTrue(true);
     }
 }

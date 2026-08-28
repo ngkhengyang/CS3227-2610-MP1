@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RequirementsManagerTest {
     @Test
-    void addRequirementStoresSupportedRequirementTypesInOrder() {
+    void addRequirement_storesSupportedTypesInOrder() {
         RequirementsManager manager = new RequirementsManager();
         Requirement moduleRequirement = new ModuleRequirement(
                 "foundation", "Foundation", "", Set.of("CS1231S"));
@@ -36,7 +36,7 @@ class RequirementsManagerTest {
     }
 
     @Test
-    void addRequirementRejectsNullRequirements() {
+    void addRequirement_rejectsNull() {
         RequirementsManager manager = new RequirementsManager();
 
         assertThrows(IllegalArgumentException.class, () -> manager.addRequirement(null));
@@ -44,7 +44,7 @@ class RequirementsManagerTest {
     }
 
     @Test
-    void addRequirementRejectsDuplicateIds() {
+    void addRequirement_rejectsDuplicateId() {
         RequirementsManager manager = new RequirementsManager();
         manager.addRequirement(new ModuleRequirement(
                 "foundation", "Foundation", "", Set.of("CS1231S")));
@@ -57,7 +57,7 @@ class RequirementsManagerTest {
     }
 
     @Test
-    void requirementsSnapshotCannotBeModified() {
+    void getRequirements_returnsUnmodifiableSnapshot() {
         RequirementsManager manager = new RequirementsManager();
         manager.addRequirement(new ModuleRequirement(
                 "foundation", "Foundation", "", Set.of("CS1231S")));
@@ -67,7 +67,7 @@ class RequirementsManagerTest {
     }
 
     @Test
-    void addChildRequirementAddsChildUnderDirectCompositeParent() {
+    void addChildRequirement_addsToDirectParent() {
         AllOfRequirement parent = new AllOfRequirement(
                 "foundation", "Foundation", "", List.of());
         RequirementsManager manager = new RequirementsManager(List.of(parent));
@@ -79,7 +79,7 @@ class RequirementsManagerTest {
     }
 
     @Test
-    void addChildRequirementFindsNestedCompositeParent() {
+    void addChildRequirement_findsNestedParent() {
         AllOfRequirement nestedParent = new AllOfRequirement(
                 "focus", "Focus", "", List.of());
         AllOfRequirement root = new AllOfRequirement(
@@ -94,7 +94,7 @@ class RequirementsManagerTest {
     }
 
     @Test
-    void addChildRequirementRejectsInvalidParentsAndChildren() {
+    void addChildRequirement_rejectsInvalidParentOrChild() {
         Requirement leaf = new ModuleRequirement(
                 "foundation", "Foundation", "", Set.of("CS1231S"));
         RequirementsManager leafManager = new RequirementsManager(List.of(leaf));
@@ -113,7 +113,7 @@ class RequirementsManagerTest {
     }
 
     @Test
-    void addChildRequirementRejectsDuplicateIdsWithoutMutatingParent() {
+    void addChildRequirement_rejectsDuplicateIdWithoutMutation() {
         AllOfRequirement parent = new AllOfRequirement(
                 "foundation", "Foundation", "", List.of());
         RequirementsManager manager = new RequirementsManager(List.of(parent));
@@ -127,7 +127,7 @@ class RequirementsManagerTest {
     }
 
     @Test
-    void deleteRequirementFromRoot() {
+    void deleteRequirement_removesRoot() {
         Requirement first = new ModuleRequirement(
                 "first", "First", "", Set.of("CS1231S"));
         Requirement second = new UnitCountRequirement(
@@ -139,7 +139,7 @@ class RequirementsManagerTest {
     }
 
     @Test
-    void deleteRequirementFromParent() {
+    void deleteRequirement_removesChild() {
         Requirement child = new ModuleRequirement(
                 "child", "Child", "", Set.of("CS2040S"));
         AllOfRequirement parent = new AllOfRequirement(
@@ -151,7 +151,7 @@ class RequirementsManagerTest {
     }
 
     @Test
-    void deleteRequirementFromHeavilyNestedTree() {
+    void deleteRequirement_removesNestedChild() {
         Requirement nestedChild = new ModuleRequirement(
                 "nested-child", "Nested child", "", Set.of("CS1231S"));
         AllOfRequirement nestedParent = new AllOfRequirement(
@@ -165,7 +165,7 @@ class RequirementsManagerTest {
     }
 
     @Test
-    void deleteRequirementRejectsInvalidTargets() {
+    void deleteRequirement_rejectsInvalidTarget() {
         Requirement leaf = new ModuleRequirement(
                 "leaf", "Leaf", "", Set.of("CS1231S"));
         AllOfRequirement parent = new AllOfRequirement(

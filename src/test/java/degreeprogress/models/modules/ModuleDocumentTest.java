@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ModuleDocumentTest {
     @Test
-    void documentFindsModulesByCaseInsensitiveCode() {
+    void findByCode_matchesCaseInsensitively() {
         Module module = new Module("CP3880", 4, false);
         ModuleDocument document = new ModuleDocument(1, List.of(module));
 
@@ -21,7 +21,7 @@ class ModuleDocumentTest {
     }
 
     @Test
-    void documentRejectsDuplicateModuleCodes() {
+    void moduleDocumentConstructor_rejectsDuplicateCodes() {
         Module first = new Module("CS2040", 4, false);
         Module duplicate = new Module("cs2040", 4, true);
 
@@ -30,7 +30,7 @@ class ModuleDocumentTest {
     }
 
     @Test
-    void documentDefensivelyCopiesModuleList() {
+    void moduleDocumentConstructor_copiesModuleList() {
         List<Module> modules = new java.util.ArrayList<>();
         modules.add(new Module("CS2040", 4, false));
         ModuleDocument document = new ModuleDocument(1, modules);
