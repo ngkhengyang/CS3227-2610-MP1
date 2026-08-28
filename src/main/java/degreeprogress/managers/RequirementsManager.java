@@ -1,12 +1,12 @@
 package degreeprogress.managers;
 
-import degreeprogress.models.requirements.CompositeRequirement;
-import degreeprogress.models.requirements.Requirement;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import degreeprogress.models.requirements.CompositeRequirement;
+import degreeprogress.models.requirements.Requirement;
 
 /** Owns the requirements defined for the student's degree. */
 public final class RequirementsManager {

@@ -1,15 +1,16 @@
 package degreeprogress.managers;
 
-import degreeprogress.models.modules.Module;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+
+import degreeprogress.models.modules.Module;
 
 class ModulesManagerTest {
     @Test
@@ -25,7 +26,7 @@ class ModulesManagerTest {
                         new Module("CS2040S", "Data Structures", 4),
                         new Module("cs2040s", "Duplicate", 4))));
     }
-        
+
     @Test
     void addModule_storesIncompleteModule() {
         ModulesManager manager = new ModulesManager();
@@ -110,7 +111,7 @@ class ModulesManagerTest {
     }
 
     @Test
-    void editModule_changesAndNormalisesCode() {
+    void editModule_changesAndNormalizesCode() {
         ModulesManager manager = new ModulesManager(List.of(
                 new Module("CS2040S", "Data Structures", 4)));
 
@@ -247,7 +248,7 @@ class ModulesManagerTest {
                 new Module("CS2040S", "Data Structures", 4),
                 new Module("CP2106", "Independent Software Development Project", 4),
                 new Module("EE1001", "Digital Literacy", 4)));
-                
+
         assertEquals(List.of(), manager.searchModules("biology"));
     }
 }

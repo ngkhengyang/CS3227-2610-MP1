@@ -10,15 +10,18 @@ public record EvaluationResult(
         int target,
         List<EvaluationResult> children) {
 
+    /** Creates a result with an immutable child list. */
     public EvaluationResult {
         children = List.copyOf(children);
     }
 
+    /** Creates a result for a leaf requirement. */
     public static EvaluationResult leaf(
             String requirementId, boolean fulfilled, int achieved, int target) {
         return new EvaluationResult(requirementId, fulfilled, achieved, target, List.of());
     }
 
+    /** Creates a result for a composite requirement. */
     public static EvaluationResult composite(
             String requirementId, boolean fulfilled, List<EvaluationResult> children) {
         int achieved = (int) children.stream().filter(EvaluationResult::fulfilled).count();

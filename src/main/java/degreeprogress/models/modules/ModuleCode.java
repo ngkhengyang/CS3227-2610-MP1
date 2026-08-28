@@ -4,20 +4,21 @@ import java.util.Locale;
 import java.util.Objects;
 
 /**
- * The normalised identity of a module and the information derived from it.
+ * The normalized identity of a module and the information derived from it.
  *
  * <p>A module code consists of a leading alphabetic prefix followed by at
  * least one digit. Any trailing suffix is retained as part of the code. For
  * example, {@code CS2040S} has prefix {@code CS} and level {@code 2000}.</p>
  */
 public record ModuleCode(String value) {
+    /** Creates a normalized module code after validating its prefix and level. */
     public ModuleCode {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("Module code must not be blank");
         }
 
-        String normalised = value.trim().toUpperCase(Locale.ROOT);
-        int firstDigit = firstDigitIndex(normalised);
+        String normalized = value.trim().toUpperCase(Locale.ROOT);
+        int firstDigit = firstDigitIndex(normalized);
         if (firstDigit == 0) {
             throw new IllegalArgumentException("Module code must start with a prefix");
         }
@@ -25,11 +26,11 @@ public record ModuleCode(String value) {
             throw new IllegalArgumentException("Module code must contain a level digit");
         }
         for (int index = 0; index < firstDigit; index++) {
-            if (!Character.isLetter(normalised.charAt(index))) {
+            if (!Character.isLetter(normalized.charAt(index))) {
                 throw new IllegalArgumentException("Module code prefix must contain letters only");
             }
         }
-        value = normalised;
+        value = normalized;
     }
 
     /** Returns the alphabetic prefix before the first digit. */
@@ -49,11 +50,11 @@ public record ModuleCode(String value) {
     /** Returns whether this code has the supplied prefix, ignoring case. */
     public boolean startsWith(String prefix) {
         Objects.requireNonNull(prefix, "prefix");
-        String normalisedPrefix = prefix.trim().toUpperCase(Locale.ROOT);
-        if (normalisedPrefix.isEmpty()) {
+        String normalizedPrefix = prefix.trim().toUpperCase(Locale.ROOT);
+        if (normalizedPrefix.isEmpty()) {
             throw new IllegalArgumentException("Module prefix must not be blank");
         }
-        return value.startsWith(normalisedPrefix);
+        return value.startsWith(normalizedPrefix);
     }
 
     private static int firstDigitIndex(String code) {

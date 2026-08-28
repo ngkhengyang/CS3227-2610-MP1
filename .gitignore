@@ -18,3 +18,6 @@ Thumbs.db
 # Local application data
 degree-progress-data.json
 *.local.json
+
+# Temporary files from skills
+_temp/

@@ -1,8 +1,8 @@
 package degreeprogress.models.requirements;
 
-import degreeprogress.models.modules.Module;
-
 import java.util.Collection;
+
+import degreeprogress.models.modules.Module;
 
 /** A requirement for at least, and optionally at most, N units from matching modules. */
 public final class UnitCountRequirement extends Requirement {
@@ -10,12 +10,14 @@ public final class UnitCountRequirement extends Requirement {
     private int minimumUnits;
     private Integer maximumUnits;
 
+    /** Creates a unit-count requirement without a maximum. */
     public UnitCountRequirement(
             String id, String name, String description,
             ModuleSelector selector, int minimumUnits) {
         this(id, name, description, selector, minimumUnits, null);
     }
 
+    /** Creates a unit-count requirement with optional lower and upper bounds. */
     public UnitCountRequirement(
             String id, String name, String description,
             ModuleSelector selector, int minimumUnits, Integer maximumUnits) {
@@ -52,6 +54,7 @@ public final class UnitCountRequirement extends Requirement {
         return maximumUnits;
     }
 
+    /** Sets the minimum and optional maximum number of matching units. */
     public void setBounds(int minimumUnits, Integer maximumUnits) {
         if (minimumUnits < 0) {
             throw new IllegalArgumentException("Minimum units must not be negative");

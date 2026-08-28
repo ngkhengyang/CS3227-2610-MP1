@@ -27,9 +27,16 @@ Prerequisite checking, cohort-specific rules, what-if planning, chatbot interact
 
 ## Coding conventions
 
-- Name JUnit test methods using `<Function/method name>_<test case purpose>`.
-- Keep test names concise and use lower camel case within each part, for example `addModule_invalidUnits`.
-- Preserve the separator underscore between the method name and the test purpose.
+- All Java production and test code must follow the project-specific
+  `.codex/skills/seedu-java-coding-standard/SKILL.md`, which is based on the
+  [SE-EDU Java coding standard](https://se-education.org/guides/conventions/java/intermediate.html).
+- Name JUnit test methods using the standard's
+  `featureUnderTest_testScenario_expectedBehavior` format. The scenario and
+  expected-behavior parts may be omitted when the remaining name is unambiguous.
+- Keep test names concise, use lower camel case within each part, and preserve
+  the separator underscores.
+- Apply the standard's naming, layout, import, whitespace, brace, initialization,
+  and public API documentation rules to all Java files in the project.
 
 ## High-level architecture
 

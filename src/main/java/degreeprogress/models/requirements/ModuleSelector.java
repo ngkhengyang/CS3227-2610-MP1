@@ -1,10 +1,10 @@
 package degreeprogress.models.requirements;
 
-import degreeprogress.models.modules.Module;
-
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+
+import degreeprogress.models.modules.Module;
 
 /**
  * Describes which completed modules contribute to a requirement.
@@ -16,13 +16,14 @@ public final class ModuleSelector {
     private final Integer minimumLevel;
     private final Integer maximumLevel;
 
+    /** Creates a selector from optional code and level criteria. */
     public ModuleSelector(
             Set<String> moduleCodes,
             Set<String> codePrefixes,
             Integer minimumLevel,
             Integer maximumLevel) {
-        this.moduleCodes = normalise(moduleCodes);
-        this.codePrefixes = normalise(codePrefixes);
+        this.moduleCodes = normalize(moduleCodes);
+        this.codePrefixes = normalize(codePrefixes);
         if (minimumLevel != null && minimumLevel < 0) {
             throw new IllegalArgumentException("Minimum level must not be negative");
         }
@@ -36,14 +37,17 @@ public final class ModuleSelector {
         this.maximumLevel = maximumLevel;
     }
 
+    /** Returns a selector that matches every module. */
     public static ModuleSelector allModules() {
         return new ModuleSelector(Set.of(), Set.of(), null, null);
     }
 
+    /** Returns a selector that matches the supplied module codes. */
     public static ModuleSelector forCodes(String... moduleCodes) {
         return new ModuleSelector(Set.of(moduleCodes), Set.of(), null, null);
     }
 
+    /** Returns whether the supplied module satisfies this selector. */
     public boolean matches(Module module) {
         String code = module.getCode().toUpperCase(Locale.ROOT);
         boolean matchesCode = moduleCodes.isEmpty() || moduleCodes.contains(code);
@@ -70,7 +74,7 @@ public final class ModuleSelector {
         return maximumLevel;
     }
 
-    private static Set<String> normalise(Set<String> values) {
+    private static Set<String> normalize(Set<String> values) {
         Set<String> result = new HashSet<>();
         for (String value : values == null ? Set.<String>of() : values) {
             if (value == null || value.isBlank()) {

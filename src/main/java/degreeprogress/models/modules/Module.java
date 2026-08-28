@@ -21,16 +21,17 @@ public final class Module {
         this(new ModuleCode(code), name, units, false);
     }
 
+    /** Creates a module whose name defaults to its code. */
     public Module(String code, int units, boolean completed) {
         this(new ModuleCode(code), code, units, completed);
     }
 
-    /** Creates a module from an already-normalised module code value. */
+    /** Creates a module from an already-normalized module code value. */
     public Module(ModuleCode code, int units, boolean completed) {
         this(code, code == null ? null : code.value(), units, completed);
     }
 
-    /** Creates a module from an already-normalised module code value. */
+    /** Creates a module from an already-normalized module code value. */
     public Module(ModuleCode code, String name, int units, boolean completed) {
         if (code == null) {
             throw new IllegalArgumentException("Module code must be provided");
@@ -84,6 +85,7 @@ public final class Module {
         return code.getPrefix();
     }
 
+    /** Returns whether this module has the supplied prefix, ignoring case. */
     public boolean hasPrefix(String prefix) {
         return code.startsWith(prefix);
     }

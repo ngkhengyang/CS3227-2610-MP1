@@ -1,5 +1,17 @@
 package degreeprogress.storage;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Set;
+
+import org.junit.jupiter.api.Test;
+
 import degreeprogress.models.requirements.AllOfRequirement;
 import degreeprogress.models.requirements.AnyOfRequirement;
 import degreeprogress.models.requirements.ModuleCountRequirement;
@@ -8,17 +20,6 @@ import degreeprogress.models.requirements.ProgrammeInfo;
 import degreeprogress.models.requirements.Requirement;
 import degreeprogress.models.requirements.RequirementDocument;
 import degreeprogress.models.requirements.UnitCountRequirement;
-import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class RequirementStorageTest {
     private final RequirementStorage storage = new RequirementStorage();
@@ -34,8 +35,8 @@ class RequirementStorageTest {
         }
 
         RequirementDocument parsed = storage.parse(json);
-        String serialised = storage.serialize(parsed);
-        RequirementDocument reparsed = storage.parse(serialised);
+        String serialized = storage.serialize(parsed);
+        RequirementDocument reparsed = storage.parse(serialized);
 
         assertEquals(1, parsed.schemaVersion());
         assertEquals("bcomp-cs", parsed.programme().id());

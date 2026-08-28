@@ -3,13 +3,14 @@ package degreeprogress.models.requirements;
 
 import java.util.List;
 
-/** The complete JSON-serialisable document containing requirement roots. */
+/** The complete JSON-serializable document containing requirement roots. */
 public record RequirementDocument(
         int schemaVersion,
         ProgrammeInfo programme,
         List<String> sources,
         List<Requirement> requirements) {
 
+    /** Validates the document and defensively copies its collections. */
     public RequirementDocument {
         if (schemaVersion <= 0) {
             throw new IllegalArgumentException("Schema version must be positive");

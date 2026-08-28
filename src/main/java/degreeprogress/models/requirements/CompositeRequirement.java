@@ -1,10 +1,10 @@
 package degreeprogress.models.requirements;
 
-import degreeprogress.models.modules.Module;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import degreeprogress.models.modules.Module;
 
 /** Shared implementation for requirements that contain child requirements. */
 public abstract class CompositeRequirement extends Requirement {
@@ -34,6 +34,7 @@ public abstract class CompositeRequirement extends Requirement {
         return List.copyOf(children);
     }
 
+    /** Adds a child requirement. */
     public void addChild(Requirement child) {
         if (child == null) {
             throw new IllegalArgumentException("Child requirement must not be null");
@@ -41,6 +42,7 @@ public abstract class CompositeRequirement extends Requirement {
         children.add(child);
     }
 
+    /** Removes child requirements matching the supplied id. */
     public void removeChild(String childId) {
         children.removeIf(child -> child.getId().equals(childId));
     }

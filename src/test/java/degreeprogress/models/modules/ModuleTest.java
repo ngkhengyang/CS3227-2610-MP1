@@ -1,15 +1,15 @@
 package degreeprogress.models.modules;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.junit.jupiter.api.Test;
+
 class ModuleTest {
     @Test
-    void moduleConstructor_normalisesCodeAndLevel() {
+    void moduleConstructor_normalizesCodeAndLevel() {
         Module module = new Module(" cp3880 ", 4, false);
 
         assertEquals("CP3880", module.getCode());

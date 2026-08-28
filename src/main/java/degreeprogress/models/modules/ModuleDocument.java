@@ -7,6 +7,7 @@ import java.util.Set;
 
 /** The complete module data set represented by a future JSON document. */
 public record ModuleDocument(int schemaVersion, List<Module> modules) {
+    /** Validates the document and defensively copies its module list. */
     public ModuleDocument {
         if (schemaVersion <= 0) {
             throw new IllegalArgumentException("Schema version must be positive");
@@ -27,7 +28,7 @@ public record ModuleDocument(int schemaVersion, List<Module> modules) {
         modules = List.copyOf(suppliedModules);
     }
 
-    /** Finds a module by its normalised code. */
+    /** Finds a module by its normalized code. */
     public Optional<Module> findByCode(String code) {
         ModuleCode requestedCode = new ModuleCode(code);
         return modules.stream()

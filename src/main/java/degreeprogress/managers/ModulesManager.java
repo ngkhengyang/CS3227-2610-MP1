@@ -1,13 +1,14 @@
 package degreeprogress.managers;
 
-import degreeprogress.models.modules.Module;
-import degreeprogress.models.modules.ModuleCode;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
+
+import degreeprogress.models.modules.Module;
+import degreeprogress.models.modules.ModuleCode;
 
 /** Owns the modules recorded by the student. */
 public final class ModulesManager {
@@ -95,7 +96,7 @@ public final class ModulesManager {
         module.setCompleted(false);
         return module;
     }
-    
+
     /** Deletes the module identified by its code. */
     public Module deleteModule(String code) {
         ModuleCode moduleCode = new ModuleCode(code);
@@ -129,7 +130,7 @@ public final class ModulesManager {
                 .toList();
     }
 
-    private java.util.Optional<Module> findModule(ModuleCode code) {
+    private Optional<Module> findModule(ModuleCode code) {
         return modules.stream()
                 .filter(module -> module.getModuleCode().equals(code))
                 .findFirst();

@@ -8,6 +8,7 @@ public final class Launcher {
     private Launcher() {
     }
 
+    /** Launches the JavaFX application. */
     public static void main(String[] args) {
         DegreeProgressApp.launch(DegreeProgressApp.class, args);
     }

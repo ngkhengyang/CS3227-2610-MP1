@@ -1,9 +1,9 @@
 package degreeprogress.models.requirements;
 
-import degreeprogress.models.modules.Module;
-
 import java.util.Collection;
 import java.util.List;
+
+import degreeprogress.models.modules.Module;
 
 /** Base class for every user-defined requirement. */
 public abstract class Requirement {
@@ -23,6 +23,7 @@ public abstract class Requirement {
         this.description = description == null ? "" : description;
     }
 
+    /** Evaluates this requirement against the supplied modules. */
     public abstract EvaluationResult evaluate(Collection<Module> modules);
 
     public List<Requirement> getChildren() {

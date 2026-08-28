@@ -1,8 +1,8 @@
 package degreeprogress.models.requirements;
 
-import degreeprogress.models.modules.Module;
-
 import java.util.Collection;
+
+import degreeprogress.models.modules.Module;
 
 /** A requirement for at least, and optionally at most, N matching modules. */
 public final class ModuleCountRequirement extends Requirement {
@@ -10,12 +10,14 @@ public final class ModuleCountRequirement extends Requirement {
     private int minimumModules;
     private Integer maximumModules;
 
+    /** Creates a module-count requirement without a maximum. */
     public ModuleCountRequirement(
             String id, String name, String description,
             ModuleSelector selector, int minimumModules) {
         this(id, name, description, selector, minimumModules, null);
     }
 
+    /** Creates a module-count requirement with optional lower and upper bounds. */
     public ModuleCountRequirement(
             String id, String name, String description,
             ModuleSelector selector, int minimumModules, Integer maximumModules) {
@@ -51,6 +53,7 @@ public final class ModuleCountRequirement extends Requirement {
         return maximumModules;
     }
 
+    /** Sets the minimum and optional maximum number of matching modules. */
     public void setBounds(int minimumModules, Integer maximumModules) {
         if (minimumModules < 0) {
             throw new IllegalArgumentException("Minimum modules must not be negative");

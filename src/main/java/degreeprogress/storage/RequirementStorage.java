@@ -1,10 +1,17 @@
 package degreeprogress.storage;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import degreeprogress.models.requirements.AllOfRequirement;
 import degreeprogress.models.requirements.AnyOfRequirement;
 import degreeprogress.models.requirements.ModuleCountRequirement;
@@ -15,12 +22,6 @@ import degreeprogress.models.requirements.Requirement;
 import degreeprogress.models.requirements.RequirementDocument;
 import degreeprogress.models.requirements.UnitCountRequirement;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-
 /**
  * Converts the requirement domain model to and from the application's JSON
  * requirement format. This component deliberately has no file-system logic.
@@ -28,17 +29,18 @@ import java.util.Set;
 public final class RequirementStorage {
     private final ObjectMapper objectMapper;
 
+    /** Creates a requirement JSON converter. */
     public RequirementStorage() {
         objectMapper = new ObjectMapper();
     }
 
-    /** Serialises a complete requirement document as indented JSON. */
+    /** Serializes a complete requirement document as indented JSON. */
     public String serialize(RequirementDocument document) {
         try {
             return objectMapper.writerWithDefaultPrettyPrinter()
                     .writeValueAsString(writeDocument(document));
         } catch (JsonProcessingException exception) {
-            throw new IllegalArgumentException("Could not serialise requirement document", exception);
+            throw new IllegalArgumentException("Could not serialize requirement document", exception);
         }
     }
 
