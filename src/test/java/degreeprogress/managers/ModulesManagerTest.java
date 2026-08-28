@@ -191,4 +191,59 @@ class ModulesManagerTest {
         assertThrows(IllegalArgumentException.class,
                 () -> manager.markModuleUncompleted("CS1231S"));
     }
+
+    @Test
+    void searchModulesMatchesCodeSubstringsCaseInsensitively() {
+        ModulesManager manager = new ModulesManager(List.of(
+                new Module("CS2040S", "Data Structures", 4),
+                new Module("CP2106", "Independent Software Development Project", 4)));
+
+        List<Module> results = manager.searchModules("40s");
+
+        assertEquals(List.of("CS2040S"), results.stream().map(Module::getCode).toList());
+    }
+
+    @Test
+    void searchModulesMatchesTitleSubstringsCaseInsensitively() {
+        ModulesManager manager = new ModulesManager(List.of(
+                new Module("CS2040S", "Data Structures", 4),
+                new Module("CP2106", "Independent Software Development Project", 4)));
+
+        List<Module> results = manager.searchModules("sOftWAre dEVEl");
+
+        assertEquals(List.of("CP2106"), results.stream().map(Module::getCode).toList());
+    }
+
+    @Test
+    void searchModulesBlankSearch() {
+        Module first = new Module("CS2040S", "Data Structures", 4);
+        Module second = new Module("CP2106", "Independent Software Development Project", 4);
+        ModulesManager manager = new ModulesManager(List.of(first, second));
+
+        List<Module> results = manager.searchModules("  ");
+
+        assertEquals(List.of(first, second), results);
+    }
+
+    @Test
+    void searchModulesAllMatching() {
+        ModulesManager manager = new ModulesManager(List.of(
+                new Module("CS2040S", "Data Structures", 4),
+                new Module("CP2106", "Independent Software Development Project", 4),
+                new Module("EE1001", "Digital Literacy", 4)));
+
+        assertEquals(
+                List.of("CS2040S", "CP2106"),
+                manager.searchModules("s").stream().map(Module::getCode).toList());
+        assertEquals(List.of(), manager.searchModules("biology"));
+    }
+
+    void searchModulesNoMatches() {
+        ModulesManager manager = new ModulesManager(List.of(
+                new Module("CS2040S", "Data Structures", 4),
+                new Module("CP2106", "Independent Software Development Project", 4),
+                new Module("EE1001", "Digital Literacy", 4)));
+                
+        assertEquals(List.of(), manager.searchModules("biology"));
+    }
 }

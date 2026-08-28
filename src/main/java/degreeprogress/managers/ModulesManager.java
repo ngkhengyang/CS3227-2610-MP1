@@ -6,6 +6,7 @@ import degreeprogress.models.modules.ModuleCode;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 /** Owns the modules recorded by the student. */
@@ -113,6 +114,21 @@ public final class ModulesManager {
         return List.copyOf(modules);
     }
 
+    /**
+     * Searches module codes and titles for the supplied case-insensitive
+     * substring. A blank search returns all modules in their current order.
+     */
+    public List<Module> searchModules(String searchTerm) {
+        if (searchTerm == null || searchTerm.isBlank()) {
+            return getModules();
+        }
+
+        String normalizedSearchTerm = searchTerm.trim().toLowerCase(Locale.ROOT);
+        return modules.stream()
+                .filter(module -> matchesSearch(module, normalizedSearchTerm))
+                .toList();
+    }
+
     private java.util.Optional<Module> findModule(ModuleCode code) {
         return modules.stream()
                 .filter(module -> module.getModuleCode().equals(code))
@@ -126,5 +142,10 @@ public final class ModulesManager {
             }
         }
         return -1;
+    }
+
+    private boolean matchesSearch(Module module, String normalizedSearchTerm) {
+        return module.getCode().toLowerCase(Locale.ROOT).contains(normalizedSearchTerm)
+                || module.getName().toLowerCase(Locale.ROOT).contains(normalizedSearchTerm);
     }
 }
