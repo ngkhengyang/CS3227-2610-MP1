@@ -24,7 +24,20 @@ public abstract class Requirement {
     }
 
     /** Evaluates this requirement against the supplied modules. */
-    public abstract EvaluationResult evaluate(Collection<Module> modules);
+    public final EvaluationResult evaluate(Collection<Module> modules) {
+        return evaluate(new EvaluationContext(modules));
+    }
+
+    /** Evaluates this requirement using a context shared by the requirement tree. */
+    public final EvaluationResult evaluate(EvaluationContext context) {
+        if (context == null) {
+            throw new IllegalArgumentException("Evaluation context must not be null");
+        }
+        return evaluateWithContext(context);
+    }
+
+    /** Evaluates this requirement using precomputed module indexes. */
+    protected abstract EvaluationResult evaluateWithContext(EvaluationContext context);
 
     public List<Requirement> getChildren() {
         return List.of();

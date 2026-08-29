@@ -24,7 +24,13 @@ public record EvaluationResult(
     /** Creates a result for a composite requirement. */
     public static EvaluationResult composite(
             String requirementId, boolean fulfilled, List<EvaluationResult> children) {
+        return composite(requirementId, fulfilled, children.size(), children);
+    }
+
+    /** Creates a result for a composite requirement with an explicit progress target. */
+    public static EvaluationResult composite(
+            String requirementId, boolean fulfilled, int target, List<EvaluationResult> children) {
         int achieved = (int) children.stream().filter(EvaluationResult::fulfilled).count();
-        return new EvaluationResult(requirementId, fulfilled, achieved, children.size(), children);
+        return new EvaluationResult(requirementId, fulfilled, achieved, target, children);
     }
 }

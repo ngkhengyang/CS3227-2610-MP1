@@ -1,9 +1,5 @@
 package degreeprogress.models.requirements;
 
-import java.util.Collection;
-
-import degreeprogress.models.modules.Module;
-
 /** A requirement for at least, and optionally at most, N units from matching modules. */
 public final class UnitCountRequirement extends Requirement {
     private ModuleSelector selector;
@@ -27,12 +23,8 @@ public final class UnitCountRequirement extends Requirement {
     }
 
     @Override
-    public EvaluationResult evaluate(Collection<Module> modules) {
-        int achieved = modules.stream()
-                .filter(Module::isCompleted)
-                .filter(selector::matches)
-                .mapToInt(Module::getUnits)
-                .sum();
+    protected EvaluationResult evaluateWithContext(EvaluationContext context) {
+        int achieved = context.summarize(selector).matchedUnits();
         boolean meetsMinimum = achieved >= minimumUnits;
         boolean meetsMaximum = maximumUnits == null || achieved <= maximumUnits;
         return EvaluationResult.leaf(getId(), meetsMinimum && meetsMaximum, achieved, minimumUnits);

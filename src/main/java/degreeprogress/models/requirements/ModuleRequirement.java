@@ -1,11 +1,8 @@
 package degreeprogress.models.requirements;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
-
-import degreeprogress.models.modules.Module;
 
 /** A requirement for a fixed set of modules, all of which must be completed. */
 public final class ModuleRequirement extends Requirement {
@@ -19,13 +16,8 @@ public final class ModuleRequirement extends Requirement {
     }
 
     @Override
-    public EvaluationResult evaluate(Collection<Module> modules) {
-        Set<String> completedCodes = modules.stream()
-                .filter(Module::isCompleted)
-                .map(Module::getCode)
-                .map(code -> code.toUpperCase(Locale.ROOT))
-                .collect(java.util.stream.Collectors.toSet());
-        int achieved = (int) moduleCodes.stream().filter(completedCodes::contains).count();
+    protected EvaluationResult evaluateWithContext(EvaluationContext context) {
+        int achieved = context.countCompletedModules(moduleCodes);
         return EvaluationResult.leaf(getId(), achieved == moduleCodes.size(), achieved, moduleCodes.size());
     }
 

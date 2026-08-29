@@ -13,4 +13,9 @@ public final class AnyOfRequirement extends CompositeRequirement {
     protected boolean isFulfilled(List<EvaluationResult> childResults) {
         return childResults.stream().anyMatch(EvaluationResult::fulfilled);
     }
+
+    @Override
+    protected int getProgressTarget(int childCount) {
+        return 1;
+    }
 }

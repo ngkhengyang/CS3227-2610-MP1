@@ -1,10 +1,7 @@
 package degreeprogress.models.requirements;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-
-import degreeprogress.models.modules.Module;
 
 /** Shared implementation for requirements that contain child requirements. */
 public abstract class CompositeRequirement extends Requirement {
@@ -20,14 +17,20 @@ public abstract class CompositeRequirement extends Requirement {
     }
 
     @Override
-    public final EvaluationResult evaluate(Collection<Module> modules) {
+    protected final EvaluationResult evaluateWithContext(EvaluationContext context) {
         List<EvaluationResult> results = children.stream()
-                .map(child -> child.evaluate(modules))
+                .map(child -> child.evaluate(context))
                 .toList();
-        return EvaluationResult.composite(getId(), isFulfilled(results), results);
+        return EvaluationResult.composite(
+                getId(), isFulfilled(results), getProgressTarget(results.size()), results);
     }
 
     protected abstract boolean isFulfilled(List<EvaluationResult> childResults);
+
+    /** Returns the number of fulfilled children needed for progress display. */
+    protected int getProgressTarget(int childCount) {
+        return childCount;
+    }
 
     @Override
     public List<Requirement> getChildren() {

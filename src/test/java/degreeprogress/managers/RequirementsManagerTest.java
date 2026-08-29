@@ -1,6 +1,7 @@
 package degreeprogress.managers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -10,8 +11,11 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import degreeprogress.models.modules.Module;
 import degreeprogress.models.requirements.AllOfRequirement;
 import degreeprogress.models.requirements.AnyOfRequirement;
+import degreeprogress.models.requirements.DegreeProgress;
+import degreeprogress.models.requirements.EvaluationResult;
 import degreeprogress.models.requirements.ModuleCountRequirement;
 import degreeprogress.models.requirements.ModuleRequirement;
 import degreeprogress.models.requirements.ModuleSelector;
@@ -209,6 +213,150 @@ class RequirementsManagerTest {
 
         assertThrows(UnsupportedOperationException.class,
                 () -> manager.getRequirements().clear());
+    }
+
+    @Test
+    void evaluateRequirement_completedModule_returnsFulfilledResult() {
+        List<Module> modules = List.of(
+                new Module("CS1231S", 4, true), 
+                new Module("CS2040S", 4, true)
+        );
+        RequirementsManager requirementsManager = new RequirementsManager(List.of(
+                new ModuleRequirement("foundation", "Foundation", "", Set.of("CS1231S", "CS2040S"))));
+        ModulesManager modulesManager = new ModulesManager(modules);
+
+        EvaluationResult result = requirementsManager.evaluateRequirement(
+                "foundation", modulesManager);
+
+        assertTrue(result.fulfilled());
+        assertEquals(2, result.achieved());
+        assertEquals(2, result.target());
+    }
+
+    @Test
+    void evaluateRequirement_completedModule_returnsUnfulfilledResult() {
+        List<Module> modules = List.of(
+                new Module("CS1231S", 4, true), 
+                new Module("CS2040S", 4, false)
+        );
+        RequirementsManager requirementsManager = new RequirementsManager(List.of(
+                new ModuleRequirement("foundation", "Foundation", "", Set.of("CS1231S", "CS2040S"))));
+        ModulesManager modulesManager = new ModulesManager(modules);
+
+        EvaluationResult result = requirementsManager.evaluateRequirement(
+                "foundation", modulesManager);
+
+        assertFalse(result.fulfilled());
+        assertEquals(1, result.achieved());
+        assertEquals(2, result.target());
+    }
+
+    @Test
+    void evaluateRequirement_nestedRequirement_returnsNestedResult() {
+        Requirement cs1231sRequirement = new ModuleRequirement(
+                "1231requirement", "1231requirement", "", Set.of("CS1231S"));
+        Requirement cs2040sRequirement = new ModuleRequirement(
+                "2040srequirement", "2040srequirement", "", Set.of("CS2040S"));
+        Requirement root = new AllOfRequirement(
+                "root", "Root", "", List.of(cs1231sRequirement, cs2040sRequirement));
+        RequirementsManager requirementsManager = new RequirementsManager(List.of(root));
+
+        List<Module> modules = List.of(
+                new Module("CS1231S", 4, true), 
+                new Module("CS2040S", 4, false)
+        );
+        EvaluationResult rootResult = requirementsManager.evaluateRequirement(
+                "root", modules);
+
+        assertEquals("root", rootResult.requirementId());
+        assertFalse(rootResult.fulfilled());
+        assertTrue(rootResult.children().get(0).fulfilled());
+        assertFalse(rootResult.children().get(1).fulfilled());
+    }
+
+    @Test
+    void evaluateRequirement_unknownId_rejectsEvaluation() {
+        RequirementsManager manager = new RequirementsManager();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> manager.evaluateRequirement(
+                        "missing", List.of(new Module("CS1231S", 4, true))));
+    }
+
+    @Test
+    void evaluateRequirements_returnsRootResultsInOrder() {
+        Requirement first = new ModuleRequirement(
+                "first", "First", "", Set.of("CS1231S"));
+        Requirement second = new UnitCountRequirement(
+                "second", "Second", "", ModuleSelector.allModules(), 4);
+        RequirementsManager manager = new RequirementsManager(List.of(first, second));
+
+        List<EvaluationResult> results = manager.evaluateRequirements(
+                List.of(new Module("CS1231S", 4, true)));
+
+        assertEquals(List.of("first", "second"),
+                results.stream().map(EvaluationResult::requirementId).toList());
+        assertTrue(results.get(0).fulfilled());
+        assertTrue(results.get(1).fulfilled());
+    }
+
+    @Test
+    void evaluateDegree_incompleteRoot_returnsIncompleteProgress() {
+        Requirement first = new ModuleRequirement(
+                "first", "First", "", Set.of("CS1231S"));
+        Requirement second = new ModuleRequirement(
+                "second", "Second", "", Set.of("CS2040S"));
+        RequirementsManager requirementsManager = new RequirementsManager(List.of(first, second));
+
+        DegreeProgress progress = requirementsManager.evaluateDegree(
+                new ModulesManager(List.of(new Module("CS1231S", 4, true))));
+
+        assertFalse(progress.fulfilled());
+        assertEquals(1, progress.achievedRequirements());
+        assertEquals(2, progress.totalRequirements());
+        assertEquals(List.of("first", "second"), progress.requirementResults().stream()
+                .map(EvaluationResult::requirementId)
+                .toList());
+    }
+
+    @Test
+    void evaluateDegree_allRootsFulfilled_returnsCompleteProgress() {
+        Requirement first = new ModuleRequirement(
+                "first", "First", "", Set.of("CS1231S"));
+        Requirement second = new UnitCountRequirement(
+                "second", "Second", "", ModuleSelector.allModules(), 8);
+        RequirementsManager requirementsManager = new RequirementsManager(List.of(first, second));
+        ModulesManager modulesManager = new ModulesManager(List.of(
+                new Module("CS1231S", 4, true),
+                new Module("CS2040S", 4, true)));
+
+        DegreeProgress progress = requirementsManager.evaluateDegree(modulesManager);
+
+        assertTrue(progress.fulfilled());
+        assertEquals(2, progress.achievedRequirements());
+        assertEquals(2, progress.totalRequirements());
+    }
+
+    @Test
+    void evaluateDegree_afterModuleStateChange_reflectsLatestState() {
+        RequirementsManager requirementsManager = new RequirementsManager(List.of(
+                new ModuleRequirement("foundation", "Foundation", "", Set.of("CS1231S"))));
+        ModulesManager modulesManager = new ModulesManager(List.of(
+                new Module("CS1231S", 4, false)));
+
+        assertFalse(requirementsManager.evaluateDegree(modulesManager).fulfilled());
+
+        modulesManager.markModuleCompleted("CS1231S");
+
+        assertTrue(requirementsManager.evaluateDegree(modulesManager).fulfilled());
+    }
+
+    @Test
+    void evaluateDegree_nullModulesManager_rejectsEvaluation() {
+        RequirementsManager manager = new RequirementsManager();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> manager.evaluateDegree((ModulesManager) null));
     }
 
     @Test

@@ -1,9 +1,5 @@
 package degreeprogress.models.requirements;
 
-import java.util.Collection;
-
-import degreeprogress.models.modules.Module;
-
 /** A requirement for at least, and optionally at most, N matching modules. */
 public final class ModuleCountRequirement extends Requirement {
     private ModuleSelector selector;
@@ -27,11 +23,8 @@ public final class ModuleCountRequirement extends Requirement {
     }
 
     @Override
-    public EvaluationResult evaluate(Collection<Module> modules) {
-        int achieved = (int) modules.stream()
-                .filter(Module::isCompleted)
-                .filter(selector::matches)
-                .count();
+    protected EvaluationResult evaluateWithContext(EvaluationContext context) {
+        int achieved = context.summarize(selector).matchedModules();
         boolean meetsMinimum = achieved >= minimumModules;
         boolean meetsMaximum = maximumModules == null || achieved <= maximumModules;
         return EvaluationResult.leaf(getId(), meetsMinimum && meetsMaximum, achieved, minimumModules);

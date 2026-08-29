@@ -1,13 +1,18 @@
 package degreeprogress.managers;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import degreeprogress.models.modules.Module;
 import degreeprogress.models.requirements.AllOfRequirement;
 import degreeprogress.models.requirements.AnyOfRequirement;
 import degreeprogress.models.requirements.CompositeRequirement;
+import degreeprogress.models.requirements.DegreeProgress;
+import degreeprogress.models.requirements.EvaluationContext;
+import degreeprogress.models.requirements.EvaluationResult;
 import degreeprogress.models.requirements.ModuleCountRequirement;
 import degreeprogress.models.requirements.ModuleRequirement;
 import degreeprogress.models.requirements.Requirement;
@@ -127,6 +132,65 @@ public final class RequirementsManager {
     /** Returns an immutable snapshot of the current requirements. */
     public List<Requirement> getRequirements() {
         return List.copyOf(requirements);
+    }
+
+    /** Evaluates one requirement against the current modules. */
+    public EvaluationResult evaluateRequirement(
+            String requirementId, ModulesManager modulesManager) {
+        if (modulesManager == null) {
+            throw new IllegalArgumentException("Modules manager must not be null");
+        }
+        return evaluateRequirement(requirementId, modulesManager.getModules());
+    }
+
+    /** Evaluates one requirement against the supplied module snapshot. */
+    public EvaluationResult evaluateRequirement(
+            String requirementId, Collection<Module> modules) {
+        validateRequirementId(requirementId);
+        Requirement requirement = findRequirement(requirementId, requirements);
+        if (requirement == null) {
+            throw new IllegalArgumentException(
+                    "No requirement exists with this id: " + requirementId);
+        }
+        return requirement.evaluate(new EvaluationContext(modules));
+    }
+
+    /** Evaluates all root requirements against the current modules. */
+    public List<EvaluationResult> evaluateRequirements(ModulesManager modulesManager) {
+        if (modulesManager == null) {
+            throw new IllegalArgumentException("Modules manager must not be null");
+        }
+        return evaluateRequirements(modulesManager.getModules());
+    }
+
+    /** Evaluates all root requirements against the supplied module snapshot. */
+    public List<EvaluationResult> evaluateRequirements(Collection<Module> modules) {
+        EvaluationContext context = new EvaluationContext(modules);
+        return evaluateRequirements(context);
+    }
+
+    /** Evaluates the complete degree against the current modules. */
+    public DegreeProgress evaluateDegree(ModulesManager modulesManager) {
+        if (modulesManager == null) {
+            throw new IllegalArgumentException("Modules manager must not be null");
+        }
+        return evaluateDegree(modulesManager.getModules());
+    }
+
+    /** Evaluates the complete degree against the supplied module snapshot. */
+    public DegreeProgress evaluateDegree(Collection<Module> modules) {
+        List<EvaluationResult> results = evaluateRequirements(modules);
+        int achieved = (int) results.stream()
+                .filter(EvaluationResult::fulfilled)
+                .count();
+        boolean fulfilled = !results.isEmpty() && achieved == results.size();
+        return new DegreeProgress(fulfilled, achieved, results.size(), results);
+    }
+
+    private List<EvaluationResult> evaluateRequirements(EvaluationContext context) {
+        return requirements.stream()
+                .map(requirement -> requirement.evaluate(context))
+                .toList();
     }
 
     private boolean containsRequirementId(String id) {

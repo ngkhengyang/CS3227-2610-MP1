@@ -2,6 +2,7 @@ package degreeprogress.models.requirements;
 
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 
 import degreeprogress.models.modules.Module;
@@ -49,7 +50,7 @@ public final class ModuleSelector {
 
     /** Returns whether the supplied module satisfies this selector. */
     public boolean matches(Module module) {
-        String code = module.getCode().toUpperCase(Locale.ROOT);
+        String code = module.getCode();
         boolean matchesCode = moduleCodes.isEmpty() || moduleCodes.contains(code);
         boolean matchesPrefix = codePrefixes.isEmpty()
                 || codePrefixes.stream().anyMatch(code::startsWith);
@@ -72,6 +73,25 @@ public final class ModuleSelector {
 
     public Integer getMaximumLevel() {
         return maximumLevel;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof ModuleSelector selector)) {
+            return false;
+        }
+        return moduleCodes.equals(selector.moduleCodes)
+                && codePrefixes.equals(selector.codePrefixes)
+                && Objects.equals(minimumLevel, selector.minimumLevel)
+                && Objects.equals(maximumLevel, selector.maximumLevel);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(moduleCodes, codePrefixes, minimumLevel, maximumLevel);
     }
 
     private static Set<String> normalize(Set<String> values) {
