@@ -11,6 +11,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 import degreeprogress.models.requirements.AllOfRequirement;
+import degreeprogress.models.requirements.AnyOfRequirement;
 import degreeprogress.models.requirements.ModuleCountRequirement;
 import degreeprogress.models.requirements.ModuleRequirement;
 import degreeprogress.models.requirements.ModuleSelector;
@@ -208,5 +209,210 @@ class RequirementsManagerTest {
 
         assertThrows(UnsupportedOperationException.class,
                 () -> manager.getRequirements().clear());
+    }
+
+    @Test
+    void editRequirement_sameModuleType_updatesMetadataAndModuleCodes() {
+        ModuleRequirement existing = new ModuleRequirement(
+                "foundation", "Foundation", "old", Set.of("CS1231S"));
+        RequirementsManager manager = new RequirementsManager(List.of(existing));
+        ModuleRequirement edited = new ModuleRequirement(
+                "foundation", "Updated foundation", "new", Set.of("CS2040S"));
+
+        assertSame(existing, manager.editRequirement("foundation", edited));
+        assertEquals("Updated foundation", existing.getName());
+        assertEquals("new", existing.getDescription());
+        assertEquals(Set.of("CS2040S"), existing.getModuleCodes());
+    }
+
+    @Test
+    void editRequirement_sameModuleCountType_updatesMetadataSelectorAndBounds() {
+        ModuleCountRequirement existing = new ModuleCountRequirement(
+                "advanced", "Advanced", "old", ModuleSelector.allModules(), 1);
+        RequirementsManager manager = new RequirementsManager(List.of(existing));
+        ModuleSelector selector = ModuleSelector.forCodes("CS4248");
+        ModuleCountRequirement edited = new ModuleCountRequirement(
+                "advanced", "Updated advanced", "new", selector, 2, 4);
+
+        manager.editRequirement("advanced", edited);
+
+        assertEquals("Updated advanced", existing.getName());
+        assertEquals("new", existing.getDescription());
+        assertEquals(selector, existing.getSelector());
+        assertEquals(2, existing.getMinimumModules());
+        assertEquals(4, existing.getMaximumModules());
+    }
+
+    @Test
+    void editRequirement_sameUnitCountType_updatesMetadataSelectorAndBounds() {
+        UnitCountRequirement existing = new UnitCountRequirement(
+                "breadth", "Breadth", "old", ModuleSelector.allModules(), 8);
+        RequirementsManager manager = new RequirementsManager(List.of(existing));
+        ModuleSelector selector = ModuleSelector.forCodes("CS1231S", "CS2040S");
+        UnitCountRequirement edited = new UnitCountRequirement(
+                "breadth", "Updated breadth", "new", selector, 12, 20);
+
+        manager.editRequirement("breadth", edited);
+
+        assertEquals("Updated breadth", existing.getName());
+        assertEquals("new", existing.getDescription());
+        assertEquals(selector, existing.getSelector());
+        assertEquals(12, existing.getMinimumUnits());
+        assertEquals(20, existing.getMaximumUnits());
+    }
+
+    @Test
+    void editRequirement_sameCompositeType_updatesMetadataAndPreservesChildren() {
+        Requirement child = new ModuleRequirement(
+                "child", "Child", "", Set.of("CS1231S"));
+        AllOfRequirement existing = new AllOfRequirement(
+                "parent", "Parent", "old", List.of(child));
+        RequirementsManager manager = new RequirementsManager(List.of(existing));
+        AllOfRequirement edited = new AllOfRequirement(
+                "parent", "Updated parent", "new", List.of());
+
+        assertSame(existing, manager.editRequirement("parent", edited));
+        assertEquals("Updated parent", existing.getName());
+        assertEquals("new", existing.getDescription());
+        assertEquals(List.of(child), existing.getChildren());
+    }
+
+    @Test
+    void editRequirement_allOfToAnyOf_preservesIdChildrenAndOrder() {
+        Requirement firstChild = new ModuleRequirement(
+                "first-child", "First child", "", Set.of("CS1231S"));
+        Requirement secondChild = new ModuleRequirement(
+                "second-child", "Second child", "", Set.of("CS2040S"));
+        AllOfRequirement existing = new AllOfRequirement(
+                "parent", "Parent", "old", List.of(firstChild, secondChild));
+        RequirementsManager manager = new RequirementsManager(List.of(existing));
+        AnyOfRequirement edited = new AnyOfRequirement(
+                "parent", "Updated parent", "new", List.of());
+
+        Requirement converted = manager.editRequirement("parent", edited);
+
+        assertEquals(AnyOfRequirement.class, converted.getClass());
+        assertEquals("parent", converted.getId());
+        assertEquals("Updated parent", converted.getName());
+        assertEquals("new", converted.getDescription());
+        assertEquals(List.of(firstChild, secondChild), converted.getChildren());
+    }
+
+    @Test
+    void editRequirement_anyOfToAllOf_preservesIdChildrenAndOrder() {
+        Requirement firstChild = new ModuleRequirement(
+                "first-child", "First child", "", Set.of("CS1231S"));
+        Requirement secondChild = new ModuleRequirement(
+                "second-child", "Second child", "", Set.of("CS2040S"));
+        AnyOfRequirement existing = new AnyOfRequirement(
+                "parent", "Parent", "old", List.of(firstChild, secondChild));
+        RequirementsManager manager = new RequirementsManager(List.of(existing));
+        AllOfRequirement edited = new AllOfRequirement(
+                "parent", "Updated parent", "new", List.of());
+
+        Requirement converted = manager.editRequirement("parent", edited);
+
+        assertEquals(AllOfRequirement.class, converted.getClass());
+        assertEquals("parent", converted.getId());
+        assertEquals(List.of(firstChild, secondChild), converted.getChildren());
+    }
+
+    @Test
+    void editRequirement_nestedComposite_replacesChildInParent() {
+        AllOfRequirement nested = new AllOfRequirement(
+                "nested", "Nested", "", List.of());
+        AllOfRequirement root = new AllOfRequirement(
+                "root", "Root", "", List.of(nested));
+        RequirementsManager manager = new RequirementsManager(List.of(root));
+        AnyOfRequirement edited = new AnyOfRequirement(
+                "nested", "Updated nested", "", List.of());
+
+        Requirement converted = manager.editRequirement("nested", edited);
+
+        assertSame(converted, root.getChildren().get(0));
+        assertEquals(AnyOfRequirement.class, converted.getClass());
+    }
+
+    @Test
+    void editRequirement_leafToCompositeConversion_rejectsEdit() {
+        Requirement existing = new ModuleRequirement(
+                "requirement", "Requirement", "old", Set.of("CS1231S"));
+        RequirementsManager manager = new RequirementsManager(List.of(existing));
+        Requirement edited = new AllOfRequirement(
+                "requirement", "Updated", "new", List.of());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> manager.editRequirement("requirement", edited));
+    }
+
+    @Test
+    void editRequirement_compositeToLeafConversion_rejectsEdit() {
+        Requirement existing = new AllOfRequirement(
+                "requirement", "Requirement", "old", List.of());
+        RequirementsManager manager = new RequirementsManager(List.of(existing));
+        Requirement edited = new ModuleRequirement(
+                "requirement", "Updated", "new", Set.of("CS1231S"));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> manager.editRequirement("requirement", edited));
+    }
+
+    @Test
+    void editRequirement_differentLeafTypeConversion_rejectsEdit() {
+        Requirement existing = new ModuleRequirement(
+                "requirement", "Requirement", "old", Set.of("CS1231S"));
+        RequirementsManager manager = new RequirementsManager(List.of(existing));
+        Requirement edited = new UnitCountRequirement(
+                "requirement", "Updated", "new", ModuleSelector.allModules(), 4);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> manager.editRequirement("requirement", edited));
+    }
+
+    @Test
+    void editRequirement_differentId_rejectsEdit() {
+        Requirement existing = new ModuleRequirement(
+                "requirement", "Requirement", "old", Set.of("CS1231S"));
+        RequirementsManager manager = new RequirementsManager(List.of(existing));
+        Requirement edited = new ModuleRequirement(
+                "different", "Updated", "new", Set.of("CS2040S"));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> manager.editRequirement("requirement", edited));
+    }
+
+    @Test
+    void editRequirement_nullEditedRequirement_rejectsEdit() {
+        RequirementsManager manager = new RequirementsManager();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> manager.editRequirement("requirement", null));
+    }
+
+    @Test
+    void editRequirement_unknownOrBlankId_rejectsEdit() {
+        RequirementsManager manager = new RequirementsManager();
+        Requirement edited = new ModuleRequirement(
+                "requirement", "Requirement", "", Set.of("CS1231S"));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> manager.editRequirement("unknown", edited));
+        assertThrows(IllegalArgumentException.class,
+                () -> manager.editRequirement("", edited));
+    }
+
+    @Test
+    void editRequirement_rejectedEdit_doesNotMutateExistingRequirement() {
+        ModuleRequirement existing = new ModuleRequirement(
+                "requirement", "Requirement", "old", Set.of("CS1231S"));
+        RequirementsManager manager = new RequirementsManager(List.of(existing));
+        Requirement edited = new UnitCountRequirement(
+                "requirement", "Updated", "new", ModuleSelector.allModules(), 4);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> manager.editRequirement("requirement", edited));
+        assertEquals("Requirement", existing.getName());
+        assertEquals("old", existing.getDescription());
+        assertEquals(Set.of("CS1231S"), existing.getModuleCodes());
     }
 }

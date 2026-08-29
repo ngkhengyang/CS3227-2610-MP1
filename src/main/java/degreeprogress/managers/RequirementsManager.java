@@ -5,8 +5,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import degreeprogress.models.requirements.AllOfRequirement;
+import degreeprogress.models.requirements.AnyOfRequirement;
 import degreeprogress.models.requirements.CompositeRequirement;
+import degreeprogress.models.requirements.ModuleCountRequirement;
+import degreeprogress.models.requirements.ModuleRequirement;
 import degreeprogress.models.requirements.Requirement;
+import degreeprogress.models.requirements.UnitCountRequirement;
 
 /** Owns the requirements defined for the student's degree. */
 public final class RequirementsManager {
@@ -87,6 +92,38 @@ public final class RequirementsManager {
         return deleted;
     }
 
+    /** Edits a requirement while applying the supported requirement type rules. */
+    public Requirement editRequirement(String requirementId, Requirement editedRequirement) {
+        validateRequirementId(requirementId);
+        if (editedRequirement == null) {
+            throw new IllegalArgumentException("Edited requirement must not be null");
+        }
+        if (!requirementId.equals(editedRequirement.getId())) {
+            throw new IllegalArgumentException("Requirement id cannot be changed");
+        }
+
+        Requirement existingRequirement = findRequirement(requirementId, requirements);
+        if (existingRequirement == null) {
+            throw new IllegalArgumentException(
+                    "No requirement exists with this id: " + requirementId);
+        }
+        validateEditableTypes(existingRequirement, editedRequirement);
+
+        if (existingRequirement instanceof CompositeRequirement existingComposite) {
+            if (existingRequirement.getClass().equals(editedRequirement.getClass())) {
+                copyMetadata(existingRequirement, editedRequirement);
+                return existingRequirement;
+            }
+            Requirement replacement = createCompositeReplacement(
+                    editedRequirement, existingComposite.getChildren());
+            replaceRequirement(requirementId, replacement);
+            return replacement;
+        }
+
+        copyLeafRequirement(existingRequirement, editedRequirement);
+        return existingRequirement;
+    }
+
     /** Returns an immutable snapshot of the current requirements. */
     public List<Requirement> getRequirements() {
         return List.copyOf(requirements);
@@ -146,5 +183,92 @@ public final class RequirementsManager {
             }
         }
         return null;
+    }
+
+    private void validateEditableTypes(Requirement existing, Requirement edited) {
+        boolean existingIsComposite = existing instanceof CompositeRequirement;
+        boolean editedIsComposite = edited instanceof CompositeRequirement;
+        if (existingIsComposite != editedIsComposite) {
+            throw new IllegalArgumentException(
+                    "Leaf and composite requirement types cannot be converted");
+        }
+        if (!existingIsComposite && !existing.getClass().equals(edited.getClass())) {
+            throw new IllegalArgumentException(
+                    "Leaf requirement types cannot be converted");
+        }
+        if (existingIsComposite
+                && !(isAllOfAndAnyOf(existing, edited))) {
+            throw new IllegalArgumentException(
+                    "Composite requirement types cannot be converted except between AllOf and AnyOf");
+        }
+    }
+
+    private boolean isAllOfAndAnyOf(Requirement first, Requirement second) {
+        return (first instanceof AllOfRequirement && second instanceof AnyOfRequirement)
+                || (first instanceof AnyOfRequirement && second instanceof AllOfRequirement)
+                || first.getClass().equals(second.getClass());
+    }
+
+    private void copyMetadata(Requirement existing, Requirement edited) {
+        existing.setName(edited.getName());
+        existing.setDescription(edited.getDescription());
+    }
+
+    private void copyLeafRequirement(Requirement existing, Requirement edited) {
+        copyMetadata(existing, edited);
+        if (existing instanceof ModuleRequirement existingModule
+                && edited instanceof ModuleRequirement editedModule) {
+            existingModule.setModuleCodes(editedModule.getModuleCodes());
+        } else if (existing instanceof ModuleCountRequirement existingModuleCount
+                && edited instanceof ModuleCountRequirement editedModuleCount) {
+            existingModuleCount.setSelector(editedModuleCount.getSelector());
+            existingModuleCount.setBounds(
+                    editedModuleCount.getMinimumModules(), editedModuleCount.getMaximumModules());
+        } else if (existing instanceof UnitCountRequirement existingUnitCount
+                && edited instanceof UnitCountRequirement editedUnitCount) {
+            existingUnitCount.setSelector(editedUnitCount.getSelector());
+            existingUnitCount.setBounds(
+                    editedUnitCount.getMinimumUnits(), editedUnitCount.getMaximumUnits());
+        }
+    }
+
+    private Requirement createCompositeReplacement(
+            Requirement edited, List<Requirement> children) {
+        if (edited instanceof AllOfRequirement) {
+            return new AllOfRequirement(
+                    edited.getId(), edited.getName(), edited.getDescription(), children);
+        }
+        return new AnyOfRequirement(
+                edited.getId(), edited.getName(), edited.getDescription(), children);
+    }
+
+    private void replaceRequirement(String id, Requirement replacement) {
+        for (int index = 0; index < requirements.size(); index++) {
+            Requirement requirement = requirements.get(index);
+            if (requirement.getId().equals(id)) {
+                requirements.set(index, replacement);
+                return;
+            }
+            if (requirement instanceof CompositeRequirement composite
+                    && replaceRequirementFromParent(id, composite, replacement)) {
+                return;
+            }
+        }
+        throw new IllegalArgumentException("No requirement exists with this id: " + id);
+    }
+
+    private boolean replaceRequirementFromParent(
+            String id, CompositeRequirement parent, Requirement replacement) {
+        for (Requirement child : parent.getChildren()) {
+            if (child.getId().equals(id)) {
+                parent.replaceChild(id, replacement);
+                return true;
+            }
+            if (child instanceof CompositeRequirement composite
+                    && replaceRequirementFromParent(id, composite, replacement)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

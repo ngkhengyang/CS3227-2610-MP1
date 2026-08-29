@@ -42,6 +42,20 @@ public abstract class CompositeRequirement extends Requirement {
         children.add(child);
     }
 
+    /** Replaces a child requirement while preserving its position. */
+    public void replaceChild(String childId, Requirement replacement) {
+        if (replacement == null) {
+            throw new IllegalArgumentException("Replacement requirement must not be null");
+        }
+        for (int index = 0; index < children.size(); index++) {
+            if (children.get(index).getId().equals(childId)) {
+                children.set(index, replacement);
+                return;
+            }
+        }
+        throw new IllegalArgumentException("No child requirement exists with this id: " + childId);
+    }
+
     /** Removes child requirements matching the supplied id. */
     public void removeChild(String childId) {
         children.removeIf(child -> child.getId().equals(childId));
