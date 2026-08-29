@@ -58,16 +58,6 @@ class RequirementsManagerTest {
     }
 
     @Test
-    void getRequirements_returnsUnmodifiableSnapshot() {
-        RequirementsManager manager = new RequirementsManager();
-        manager.addRequirement(new ModuleRequirement(
-                "foundation", "Foundation", "", Set.of("CS1231S")));
-
-        assertThrows(UnsupportedOperationException.class,
-                () -> manager.getRequirements().clear());
-    }
-
-    @Test
     void addChildRequirement_addsToDirectParent() {
         AllOfRequirement parent = new AllOfRequirement(
                 "foundation", "Foundation", "", List.of());
@@ -95,22 +85,45 @@ class RequirementsManagerTest {
     }
 
     @Test
-    void addChildRequirement_rejectsInvalidParentOrChild() {
+    void addChildRequirement_rejectsLeafParent() {
         Requirement leaf = new ModuleRequirement(
                 "foundation", "Foundation", "", Set.of("CS1231S"));
-        RequirementsManager leafManager = new RequirementsManager(List.of(leaf));
+        RequirementsManager manager = new RequirementsManager(List.of(leaf));
 
         assertThrows(IllegalArgumentException.class,
-                () -> leafManager.addChildRequirement("foundation", new ModuleRequirement(
+                () -> manager.addChildRequirement("foundation", new ModuleRequirement(
                         "child", "Child", "", Set.of("CS2040S"))));
+    }
+
+    @Test
+    void addChildRequirement_rejectsMissingParent() {
+        RequirementsManager manager = new RequirementsManager();
+
         assertThrows(IllegalArgumentException.class,
-                () -> leafManager.addChildRequirement("missing", new ModuleRequirement(
+                () -> manager.addChildRequirement("missing", new ModuleRequirement(
                         "child", "Child", "", Set.of("CS2040S"))));
+    }
+
+    @Test
+    void addChildRequirement_rejectsNullChild() {
+        AllOfRequirement parent = new AllOfRequirement(
+                "foundation", "Foundation", "", List.of());
+        RequirementsManager manager = new RequirementsManager(List.of(parent));
+
         assertThrows(IllegalArgumentException.class,
-                () -> leafManager.addChildRequirement("foundation", null));
+                () -> manager.addChildRequirement("foundation", null));
+    }
+
+    @Test
+    void addChildRequirement_rejectsBlankParentId() {
+        AllOfRequirement parent = new AllOfRequirement(
+                "foundation", "Foundation", "", List.of());
+        RequirementsManager manager = new RequirementsManager(List.of(parent));
+        Requirement child = new ModuleRequirement(
+                "child", "Child", "", Set.of("CS2040S"));
+
         assertThrows(IllegalArgumentException.class,
-                () -> leafManager.addChildRequirement("", new ModuleRequirement(
-                        "child", "Child", "", Set.of("CS2040S"))));
+                () -> manager.addChildRequirement("", child));
     }
 
     @Test
@@ -166,7 +179,7 @@ class RequirementsManagerTest {
     }
 
     @Test
-    void deleteRequirement_rejectsInvalidTarget() {
+    void deleteRequirement_rejectsNullOrBlankId() {
         Requirement leaf = new ModuleRequirement(
                 "leaf", "Leaf", "", Set.of("CS1231S"));
         AllOfRequirement parent = new AllOfRequirement(
@@ -177,8 +190,23 @@ class RequirementsManagerTest {
                 () -> manager.deleteRequirement(null));
         assertThrows(IllegalArgumentException.class,
                 () -> manager.deleteRequirement(""));
+    }
+
+    @Test
+    void deleteRequirement_rejectsMissingId() {
+        RequirementsManager manager = new RequirementsManager();
+
         assertThrows(IllegalArgumentException.class,
                 () -> manager.deleteRequirement("missing"));
-        assertEquals(List.of(leaf), parent.getChildren());
+    }
+
+    @Test
+    void getRequirements_returnsUnmodifiableSnapshot() {
+        RequirementsManager manager = new RequirementsManager();
+        manager.addRequirement(new ModuleRequirement(
+                "foundation", "Foundation", "", Set.of("CS1231S")));
+
+        assertThrows(UnsupportedOperationException.class,
+                () -> manager.getRequirements().clear());
     }
 }

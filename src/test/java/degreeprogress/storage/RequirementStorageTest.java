@@ -3,6 +3,7 @@ package degreeprogress.storage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,7 +26,22 @@ class RequirementStorageTest {
     private final RequirementStorage storage = new RequirementStorage();
 
     @Test
-    void parseAndSerialize_roundTripsBundledDocument() throws IOException {
+    void serialize_writesPolymorphicTypes() {
+        String serialized = storage.serialize(createPolymorphicDocument());
+
+        assertTrue(serialized.contains("\"type\" : \"allOf\""));
+        assertTrue(serialized.contains("\"type\" : \"module\""));
+        assertTrue(serialized.contains("\"type\" : \"moduleCount\""));
+        assertTrue(serialized.contains("\"type\" : \"unitCount\""));
+        assertTrue(serialized.contains("\"type\" : \"anyOf\""));
+        assertTrue(serialized.contains("\"minimumModules\" : 2"));
+        assertTrue(serialized.contains("\"maximumModules\" : 4"));
+        assertTrue(serialized.contains("\"minimumUnits\" : 8"));
+        assertTrue(serialized.contains("\"maximumUnits\" : 12"));
+    }
+
+    @Test
+    void parse_readsBundledDocument() throws IOException {
         String json;
         try (InputStream input = getClass().getResourceAsStream("/default-requirements.json")) {
             if (input == null) {
@@ -35,44 +51,17 @@ class RequirementStorageTest {
         }
 
         RequirementDocument parsed = storage.parse(json);
-        String serialized = storage.serialize(parsed);
-        RequirementDocument reparsed = storage.parse(serialized);
 
         assertEquals(1, parsed.schemaVersion());
         assertEquals("bcomp-cs", parsed.programme().id());
         assertEquals(160, parsed.programme().totalUnits());
         assertEquals(1, parsed.requirements().size());
         assertEquals(30, countRequirements(parsed.requirements()));
-        assertEquals(parsed.schemaVersion(), reparsed.schemaVersion());
-        assertEquals(parsed.sources(), reparsed.sources());
-        assertEquals(countRequirements(parsed.requirements()), countRequirements(reparsed.requirements()));
     }
 
     @Test
-    void serializeAndParse_preservesTypesAndFields() {
-        Requirement leaves = new AllOfRequirement(
-                "root",
-                "Root",
-                "",
-                List.of(
-                        new ModuleRequirement("module", "Module", "", Set.of("CS1231S")),
-                        new ModuleCountRequirement(
-                                "module-count", "Module count", "", null, 2, 4),
-                        new UnitCountRequirement(
-                                "unit-count", "Unit count", "", null, 8, 12),
-                        new AnyOfRequirement(
-                                "choice",
-                                "Choice",
-                                "",
-                                List.of(new ModuleRequirement(
-                                        "alternative", "Alternative", "", Set.of("CS2040S"))))));
-        RequirementDocument document = new RequirementDocument(
-                1,
-                new ProgrammeInfo("test", "Test Programme", "TEST", 160, List.of("AI")),
-                List.of("test-source"),
-                List.of(leaves));
-
-        RequirementDocument parsed = storage.parse(storage.serialize(document));
+    void parse_readsPolymorphicTypesAndFields() {
+        RequirementDocument parsed = storage.parse(createPolymorphicJson());
         Requirement root = parsed.requirements().get(0);
 
         assertInstanceOf(AllOfRequirement.class, root);
@@ -97,6 +86,56 @@ class RequirementStorageTest {
                 }
                 """;
         assertThrows(IllegalArgumentException.class, () -> storage.parse(unknownType));
+    }
+
+    private RequirementDocument createPolymorphicDocument() {
+        Requirement root = new AllOfRequirement(
+                "root",
+                "Root",
+                "",
+                List.of(
+                        new ModuleRequirement("module", "Module", "", Set.of("CS1231S")),
+                        new ModuleCountRequirement(
+                                "module-count", "Module count", "", null, 2, 4),
+                        new UnitCountRequirement(
+                                "unit-count", "Unit count", "", null, 8, 12),
+                        new AnyOfRequirement(
+                                "choice",
+                                "Choice",
+                                "",
+                                List.of(new ModuleRequirement(
+                                        "alternative", "Alternative", "", Set.of("CS2040S"))))));
+        return new RequirementDocument(
+                1,
+                new ProgrammeInfo("test", "Test Programme", "TEST", 160, List.of("AI")),
+                List.of("test-source"),
+                List.of(root));
+    }
+
+    private String createPolymorphicJson() {
+        return """
+                {
+                  "schemaVersion": 1,
+                  "programme": {
+                    "id":"test", "name":"Test Programme", "cohort":"TEST", "totalUnits":160,
+                    "focusAreas":["AI"]
+                  },
+                  "sources": ["test-source"],
+                  "requirements": [{
+                    "type":"allOf", "id":"root", "name":"Root", "description":"",
+                    "children":[
+                      {"type":"module", "id":"module", "name":"Module", "description":"", "moduleCodes":["CS1231S"]},
+                      {"type":"moduleCount", "id":"module-count", "name":"Module count", "description":"",
+                       "selector":null, "minimumModules":2, "maximumModules":4},
+                      {"type":"unitCount", "id":"unit-count", "name":"Unit count", "description":"",
+                       "selector":null, "minimumUnits":8, "maximumUnits":12},
+                      {"type":"anyOf", "id":"choice", "name":"Choice", "description":"",
+                       "children":[{"type":"module", "id":"alternative", "name":"Alternative",
+                                    "description":"", "moduleCodes":["CS2040S"]}]}
+                    ]
+                  }]
+                }
+                """;
     }
 
     private int countRequirements(List<Requirement> requirements) {

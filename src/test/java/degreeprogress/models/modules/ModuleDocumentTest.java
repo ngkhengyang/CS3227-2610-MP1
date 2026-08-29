@@ -11,13 +11,14 @@ import org.junit.jupiter.api.Test;
 
 class ModuleDocumentTest {
     @Test
-    void findByCode_matchesCaseInsensitively() {
-        Module module = new Module("CP3880", 4, false);
-        ModuleDocument document = new ModuleDocument(1, List.of(module));
+    void moduleDocumentConstructor_copiesModuleList() {
+        List<Module> modules = new java.util.ArrayList<>();
+        modules.add(new Module("CS2040", 4, false));
+        ModuleDocument document = new ModuleDocument(1, modules);
 
-        assertEquals(module, document.findByCode("cp3880").orElseThrow());
-        assertTrue(document.containsCode("CP3880"));
-        assertFalse(document.containsCode("CS2040"));
+        modules.clear();
+
+        assertEquals(1, document.modules().size());
     }
 
     @Test
@@ -30,13 +31,19 @@ class ModuleDocumentTest {
     }
 
     @Test
-    void moduleDocumentConstructor_copiesModuleList() {
-        List<Module> modules = new java.util.ArrayList<>();
-        modules.add(new Module("CS2040", 4, false));
-        ModuleDocument document = new ModuleDocument(1, modules);
+    void findByCode_matchesCaseInsensitively() {
+        Module module = new Module("CP3880", 4, false);
+        ModuleDocument document = new ModuleDocument(1, List.of(module));
 
-        modules.clear();
+        assertEquals(module, document.findByCode("cp3880").orElseThrow());
+    }
 
-        assertEquals(1, document.modules().size());
+    @Test
+    void containsCode_reportsPresence() {
+        Module module = new Module("CP3880", 4, false);
+        ModuleDocument document = new ModuleDocument(1, List.of(module));
+
+        assertTrue(document.containsCode("CP3880"));
+        assertFalse(document.containsCode("CS2040"));
     }
 }

@@ -15,72 +15,153 @@ import degreeprogress.models.modules.Module;
 class RequirementTest {
     private static final Module CS1231S = new Module("CS1231S", 4, true);
     private static final Module CS2040S = new Module("CS2040S", 4, true);
+    private static final Module incompleteCS2040S = new Module("CS2040S", 4, false);
+    private static final Module CS3227 = new Module("CS3227", 4, true);
     private static final Module CS4248 = new Module("CS4248", 4, 4000, false);
 
     @Test
-    void evaluate_requiresEveryListedModule() {
+    void moduleRequirementConstructor_rejectsEmptyCodes() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new ModuleRequirement("id", "name", "", Set.of()));
+    }
+
+    @Test
+    void unitCountConstructor_rejectsInvalidBounds() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new UnitCountRequirement("id", "name", "", null, 8, 4));
+    }
+
+    @Test
+    void moduleSelectorConstructor_rejectsReversedLevels() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new ModuleSelector(Set.of(), Set.of(), 4000, 3000));
+    }
+
+    @Test
+    void evaluate_completedModules() {
         Requirement requirement = new ModuleRequirement(
                 "foundation", "Foundation", "", Set.of("CS1231S", "CS2040S"));
 
-        EvaluationResult incomplete = requirement.evaluate(List.of(CS1231S));
         EvaluationResult complete = requirement.evaluate(List.of(CS1231S, CS2040S));
 
-        assertFalse(incomplete.fulfilled());
-        assertEquals(1, incomplete.achieved());
         assertTrue(complete.fulfilled());
         assertEquals(2, complete.achieved());
     }
 
     @Test
-    void evaluate_appliesSelectors() {
-        ModuleSelector cs4000 = new ModuleSelector(
-                Set.of(), Set.of("CS"), 4000, null);
-        Requirement moduleCount = new ModuleCountRequirement(
-                "advanced", "Advanced modules", "", cs4000, 1);
-        Requirement unitCount = new UnitCountRequirement(
-                "breadth", "Breadth", "", ModuleSelector.forCodes("CS1231S", "CS2040S"), 8);
+    void evaluate_incompleteModules() {
+        Requirement requirement = new ModuleRequirement(
+                "foundation", "Foundation", "", Set.of("CS1231S", "CS2040S"));
 
-        assertFalse(moduleCount.evaluate(List.of(CS4248)).fulfilled());
-        assertTrue(moduleCount.evaluate(List.of(new Module("CS4248", 4, 4000, true))).fulfilled());
-        assertTrue(unitCount.evaluate(List.of(CS1231S, CS2040S)).fulfilled());
+        EvaluationResult incompleteModule = requirement.evaluate(List.of(CS1231S, incompleteCS2040S));
+
+        assertFalse(incompleteModule.fulfilled());
+        assertEquals(1, incompleteModule.achieved());
     }
 
     @Test
-    void evaluate_composesChildResults() {
+    void evaluate_missingModules() {
+        Requirement requirement = new ModuleRequirement(
+                "foundation", "Foundation", "", Set.of("CS1231S", "CS2040S"));
+
+        EvaluationResult missingModule = requirement.evaluate(List.of(CS1231S));
+
+        assertFalse(missingModule.fulfilled());
+        assertEquals(1, missingModule.achieved());
+    }
+
+    @Test
+    void evaluate_appliesModuleCountSelector() {
+        ModuleSelector selector = new ModuleSelector(
+                Set.of(), Set.of("CS"), 4000, null);
+        Requirement requirement = new ModuleCountRequirement(
+                "advanced", "Advanced modules", "", selector, 1);
+
+        assertFalse(requirement.evaluate(List.of(CS3227, CS4248)).fulfilled());
+        assertTrue(requirement.evaluate(List.of(
+                CS3227, new Module("CS4248", 4, 4000, true))).fulfilled());
+    }
+
+    @Test
+    void evaluate_appliesUnitCountSelector() {
+        Requirement requirement = new UnitCountRequirement(
+                "breadth", "Breadth", "",
+                ModuleSelector.forCodes("CS1231S", "CS2040S"), 8);
+
+        assertFalse(requirement.evaluate(List.of(CS1231S, incompleteCS2040S, CS3227)).fulfilled());
+        assertTrue(requirement.evaluate(List.of(CS1231S, CS2040S, CS3227)).fulfilled());
+    }
+
+    @Test
+    void evaluate_allOfRequiresEveryChild() {
         Requirement first = new ModuleRequirement("first", "First", "", Set.of("CS1231S"));
         Requirement second = new ModuleRequirement("second", "Second", "", Set.of("CS2040S"));
         Requirement all = new AllOfRequirement("all", "Both", "", List.of(first, second));
-        Requirement any = new AnyOfRequirement("any", "Either", "", List.of(first, second));
 
         assertFalse(all.evaluate(List.of(CS1231S)).fulfilled());
-        assertTrue(any.evaluate(List.of(CS1231S)).fulfilled());
-        assertEquals(2, all.evaluate(List.of(CS1231S, CS2040S)).children().size());
+        assertFalse(all.evaluate(List.of(CS1231S, incompleteCS2040S)).fulfilled());
+        assertTrue(all.evaluate(List.of(CS1231S, CS2040S)).fulfilled());
     }
 
     @Test
-    void requirementEditing_updatesFieldsAndChildren() {
-        ModuleRequirement requirement = new ModuleRequirement(
-                "elective", "Elective", "old", Set.of("CS1231S"));
-        requirement.setName("Updated elective");
-        requirement.setDescription("new");
-        requirement.setModuleCodes(Set.of("CS2040S"));
+    void evaluate_anyOfRequiresOneChild() {
+        Requirement first = new ModuleRequirement("first", "First", "", Set.of("CS1231S"));
+        Requirement second = new ModuleRequirement("second", "Second", "", Set.of("CS2040S"));
+        Requirement any = new AnyOfRequirement("any", "Either", "", List.of(first, second));
 
-        AllOfRequirement group = new AllOfRequirement("group", "Group", "", List.of(requirement));
-        group.addChild(new ModuleRequirement("extra", "Extra", "", Set.of("CS1231S")));
-        group.removeChild("extra");
+        assertTrue(any.evaluate(List.of(CS1231S, incompleteCS2040S)).fulfilled());
+        assertFalse(any.evaluate(List.of(incompleteCS2040S)).fulfilled());
+    }
+
+    @Test
+    void setName_updatesName() {
+        ModuleRequirement requirement = new ModuleRequirement(
+                "elective", "Elective", "", Set.of("CS1231S"));
+
+        requirement.setName("Updated elective");
 
         assertEquals("Updated elective", requirement.getName());
-        assertTrue(requirement.evaluate(List.of(CS2040S)).fulfilled());
-        assertEquals(1, group.getChildren().size());
     }
 
     @Test
-    void constructor_rejectsInvalidValues() {
-        assertThrows(IllegalArgumentException.class,
-                () -> new ModuleRequirement("id", "name", "", Set.of()));
-        assertThrows(IllegalArgumentException.class,
-                () -> new UnitCountRequirement("id", "name", "", null, 8, 4));
-        assertThrows(IllegalArgumentException.class,
-                () -> new ModuleSelector(Set.of(), Set.of(), 4000, 3000));
+    void setDescription_updatesDescription() {
+        ModuleRequirement requirement = new ModuleRequirement(
+                "elective", "Elective", "old", Set.of("CS1231S"));
+
+        requirement.setDescription("new");
+
+        assertEquals("new", requirement.getDescription());
+    }
+
+    @Test
+    void setModuleCodes_updatesEvaluation() {
+        ModuleRequirement requirement = new ModuleRequirement(
+                "elective", "Elective", "", Set.of("CS1231S"));
+
+        requirement.setModuleCodes(Set.of("CS2040S"));
+
+        assertTrue(requirement.evaluate(List.of(CS2040S)).fulfilled());
+    }
+
+    @Test
+    void addChild_addsChild() {
+        AllOfRequirement group = new AllOfRequirement("group", "Group", "", List.of());
+        Requirement child = new ModuleRequirement(
+                "extra", "Extra", "", Set.of("CS1231S"));
+
+        group.addChild(child);
+
+        assertEquals(List.of(child), group.getChildren());
+    }
+
+    @Test
+    void removeChild_removesChild() {
+        Requirement child = new ModuleRequirement(
+                "extra", "Extra", "", Set.of("CS1231S"));
+        AllOfRequirement group = new AllOfRequirement("group", "Group", "", List.of(child));
+
+        group.removeChild("extra");
+
+        assertTrue(group.getChildren().isEmpty());
     }
 }

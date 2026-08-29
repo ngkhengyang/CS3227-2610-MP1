@@ -20,15 +20,6 @@ class ModuleTest {
     }
 
     @Test
-    void moduleCodeConstructor_preservesSuffix() {
-        ModuleCode code = new ModuleCode("cs2040s");
-
-        assertEquals("CS2040S", code.value());
-        assertEquals("CS", code.getPrefix());
-        assertEquals(2000, code.getLevel());
-    }
-
-    @Test
     void moduleConstructor_validatesExplicitLevel() {
         Module module = new Module("CS2040", 4, 2000, true);
 
@@ -38,12 +29,9 @@ class ModuleTest {
     }
 
     @Test
-    void moduleCodeConstructor_rejectsInvalidCodes() {
-        assertThrows(IllegalArgumentException.class, () -> new ModuleCode("2040"));
-        assertThrows(IllegalArgumentException.class, () -> new ModuleCode("CS"));
-        assertThrows(IllegalArgumentException.class, () -> new ModuleCode("C-2040"));
-        assertThrows(IllegalArgumentException.class, () -> new ModuleCode("   "));
-        assertThrows(IllegalArgumentException.class, () -> new ModuleCode("CS2040").startsWith(" "));
+    void moduleConstructor_validUnitCount() {
+        assertEquals(1, new Module("CS1010", "Introduction to Computing", 1).getUnits());
+        assertEquals(60, new Module("CS6000", "Advanced Computing", 60).getUnits());
     }
 
     @Test
@@ -53,18 +41,30 @@ class ModuleTest {
     }
 
     @Test
-    void moduleConstructor_acceptsBoundaryUnits() {
-        assertEquals(1, new Module("CS1010", "Introduction to Computing", 1).getUnits());
-        assertEquals(60, new Module("CS6000", "Advanced Computing", 60).getUnits());
-    }
-
-    @Test
-    void moduleConstructor_rejectsInvalidUnits() {
+    void moduleConstructor_rejectsInvalidUnitCount() {
         assertThrows(IllegalArgumentException.class,
                 () -> new Module("CS1010", "Introduction to Computing", 0));
         assertThrows(IllegalArgumentException.class,
                 () -> new Module("CS1010", "Introduction to Computing", -1));
         assertThrows(IllegalArgumentException.class,
                 () -> new Module("CS1010", "Introduction to Computing", 61));
+    }
+
+    @Test
+    void moduleCodeConstructor_preservesSuffix() {
+        ModuleCode code = new ModuleCode("cs2040s");
+
+        assertEquals("CS2040S", code.value());
+        assertEquals("CS", code.getPrefix());
+        assertEquals(2000, code.getLevel());
+    }
+
+    @Test
+    void moduleCodeConstructor_rejectsInvalidCodes() {
+        assertThrows(IllegalArgumentException.class, () -> new ModuleCode("2040"));
+        assertThrows(IllegalArgumentException.class, () -> new ModuleCode("CS"));
+        assertThrows(IllegalArgumentException.class, () -> new ModuleCode("C-2040"));
+        assertThrows(IllegalArgumentException.class, () -> new ModuleCode("   "));
+        assertThrows(IllegalArgumentException.class, () -> new ModuleCode("CS2040").startsWith(" "));
     }
 }
