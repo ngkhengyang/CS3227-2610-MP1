@@ -2,7 +2,7 @@
 
 An editable degree-progress tracker for NUS Computing students.
 
-The application will help students record their modules and evaluate their progress against editable degree requirements. A bundled requirement template is loaded on first launch, but the resulting requirements use the same editing and evaluation features as user-created requirements.
+The application will help students record their modules and evaluate their progress against editable degree requirements. Bundled sample requirements and a small, non-exhaustive set of modules are loaded on first launch for demonstration. The sample module codes are drawn from codes referenced by the default requirements, while names are supplied for display; this is not an authoritative or complete curriculum list.
 
 ## Status
 
@@ -62,6 +62,7 @@ src/
     resources/
       application.properties
       default-requirements.json
+      default-modules.json
   test/
     java/degreeprogress/
       models/              # Domain model tests

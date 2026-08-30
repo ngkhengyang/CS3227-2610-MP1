@@ -10,7 +10,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.security.CodeSource;
-import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -24,6 +23,7 @@ import degreeprogress.models.requirements.RequirementDocument;
 public final class StorageManager {
     private static final int SUPPORTED_SCHEMA_VERSION = 1;
     private static final String DATA_FILE_NAME = "application-data.json";
+    private static final String DEFAULT_MODULES_RESOURCE = "/default-modules.json";
     private static final String DEFAULT_REQUIREMENTS_RESOURCE = "/default-requirements.json";
 
     private final Path dataFile;
@@ -52,7 +52,7 @@ public final class StorageManager {
         return dataFile;
     }
 
-    /** Loads application data or the bundled default requirements on first launch. */
+    /** Loads application data or bundled default modules and requirements on first launch. */
     public ApplicationData load() {
         if (!Files.exists(dataFile)) {
             return createDefaultApplicationData();
@@ -114,18 +114,22 @@ public final class StorageManager {
     }
 
     private ApplicationData createDefaultApplicationData() {
-        try (InputStream input = StorageManager.class
-                .getResourceAsStream(DEFAULT_REQUIREMENTS_RESOURCE)) {
-            if (input == null) {
-                throw new StorageException("Bundled default requirements were not found");
+        try (InputStream modulesInput = StorageManager.class
+                .getResourceAsStream(DEFAULT_MODULES_RESOURCE);
+                InputStream requirementsInput = StorageManager.class
+                        .getResourceAsStream(DEFAULT_REQUIREMENTS_RESOURCE)) {
+            if (modulesInput == null || requirementsInput == null) {
+                throw new StorageException("Bundled default application data was not found");
             }
-            String json = new String(input.readAllBytes(), StandardCharsets.UTF_8);
-            RequirementDocument requirements = requirementsSerializer.parse(json);
+            ModuleDocument modules = moduleSerializer.parse(
+                    new String(modulesInput.readAllBytes(), StandardCharsets.UTF_8));
+            RequirementDocument requirements = requirementsSerializer.parse(
+                    new String(requirementsInput.readAllBytes(), StandardCharsets.UTF_8));
+            validateSupportedSchemaVersion(modules.schemaVersion());
             validateSupportedSchemaVersion(requirements.schemaVersion());
-            ModuleDocument modules = new ModuleDocument(SUPPORTED_SCHEMA_VERSION, List.of());
             return new ApplicationData(SUPPORTED_SCHEMA_VERSION, modules, requirements);
         } catch (IOException | IllegalArgumentException exception) {
-            throw new StorageException("Could not load bundled default requirements", exception);
+            throw new StorageException("Could not load bundled default application data", exception);
         }
     }
 

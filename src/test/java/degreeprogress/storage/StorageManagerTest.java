@@ -46,13 +46,15 @@ class StorageManagerTest {
     }
 
     @Test
-    void load_whenDataFileIsMissing_returnsDefaultRequirementsAndEmptyModules() {
+    void load_whenDataFileIsMissing_returnsDefaultRequirementsAndModules() {
         StorageManager storageManager = new StorageManager(
                 temporaryDirectory.resolve("missing/application-data.json"));
 
         ApplicationData loaded = storageManager.load();
 
-        assertTrue(loaded.modules().modules().isEmpty());
+        assertEquals(22, loaded.modules().modules().size());
+        assertTrue(loaded.modules().findByCode("CS1101S").orElseThrow().isCompleted());
+        assertFalse(loaded.modules().findByCode("CS2103T").orElseThrow().isCompleted());
         assertEquals("bcomp-cs", loaded.requirements().programme().id());
         assertFalse(Files.exists(storageManager.getDataFile()));
     }

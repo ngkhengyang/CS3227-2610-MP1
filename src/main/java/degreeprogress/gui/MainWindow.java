@@ -24,9 +24,10 @@ import degreeprogress.storage.StorageManager;
  */
 public final class MainWindow extends Application {
     private static final String APPLICATION_TITLE = "Degree Progress Tracker";
-    private static final double INITIAL_WIDTH = 960;
-    private static final double INITIAL_HEIGHT = 640;
+    private static final double INITIAL_WIDTH = 1440;
+    private static final double INITIAL_HEIGHT = 810;
     private static final double REQUIREMENTS_PANEL_WIDTH_RATIO = 0.35;
+    private static final double MODULES_PANEL_WIDTH_RATIO = 0.35;
 
     private final Path dataFile;
     private StorageManager storageManager;
@@ -59,10 +60,14 @@ public final class MainWindow extends Application {
         root.setLeft(requirementsPanel);
         root.setCenter(requirementDetailsPanel);
 
+        ModulesPanel modulesPanel = new ModulesPanel(modulesManager);
+        modulesPanel.prefWidthProperty().bind(root.widthProperty().multiply(MODULES_PANEL_WIDTH_RATIO));
+        root.setRight(modulesPanel);
+
         Scene scene = new Scene(root, INITIAL_WIDTH, INITIAL_HEIGHT);
         stage.setTitle(APPLICATION_TITLE);
-        stage.setMinWidth(640);
-        stage.setMinHeight(480);
+        stage.setMinWidth(INITIAL_WIDTH);
+        stage.setMinHeight(INITIAL_HEIGHT);
         stage.setScene(scene);
         stage.show();
     }

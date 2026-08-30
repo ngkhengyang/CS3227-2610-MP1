@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "modules": [
+    {
+      "code": "CS1101S",
+      "name": "Computing Methodology",
+      "units": 4,
+      "completed": true
+    },
+    {
+      "code": "CS1231S",
+      "name": "Discrete Structures",
+      "units": 4,
+      "completed": true
+    },
+    {
+      "code": "MA1521",
+      "name": "Calculus for Computing",
+      "units": 4,
+      "completed": true
+    },
+    {
+      "code": "CS2030S",
+      "name": "Programming Methodology II",
+      "units": 4,
+      "completed": true
+    },
+    {
+      "code": "CS2040S",
+      "name": "Data Structures and Algorithms",
+      "units": 4,
+      "completed": true
+    },
+    {
+      "code": "CS2100",
+      "name": "Computer Organisation",
+      "units": 4,
+      "completed": true
+    },
+    {
+      "code": "CS2101",
+      "name": "Effective Communication for Computing Professionals",
+      "units": 4,
+      "completed": false
+    },
+    {
+      "code": "CS2103T",
+      "name": "Software Engineering",
+      "units": 4,
+      "completed": false
+    },
+    {
+      "code": "CS2106",
+      "name": "Introduction to Operating Systems",
+      "units": 4,
+      "completed": false
+    },
+    {
+      "code": "IS1108",
+      "name": "Digital and AI Ethics",
+      "units": 4,
+      "completed": false
+    },
+    {
+      "code": "CS2109S",
+      "name": "Introduction to AI and Machine Learning",
+      "units": 4,
+      "completed": false
+    },
+    {
+      "code": "CS3230",
+      "name": "Design and Analysis of Algorithms",
+      "units": 4,
+      "completed": false
+    },
+    {
+      "code": "MA1522",
+      "name": "Linear Algebra for Computing",
+      "units": 4,
+      "completed": true
+    },
+    {
+      "code": "ST2334",
+      "name": "Probability and Statistics",
+      "units": 4,
+      "completed": false
+    },
+    {
+      "code": "CS3243",
+      "name": "Introduction to Artificial Intelligence",
+      "units": 4,
+      "completed": false
+    },
+    {
+      "code": "CS3244",
+      "name": "Machine Learning",
+      "units": 4,
+      "completed": false
+    },
+    {
+      "code": "CS3213",
+      "name": "Software Engineering Project",
+      "units": 4,
+      "completed": false
+    },
+    {
+      "code": "CS3217",
+      "name": "Software Engineering on Modern Application Platforms",
+      "units": 4,
+      "completed": false
+    },
+    {
+      "code": "CS4243",
+      "name": "3D Computer Vision",
+      "units": 4,
+      "completed": false
+    },
+    {
+      "code": "CS4211",
+      "name": "Formal Methods for Software Engineering",
+      "units": 4,
+      "completed": false
+    },
+    {
+      "code": "DTK1234",
+      "name": "Design Thinking for Innovation",
+      "units": 4,
+      "completed": false
+    },
+    {
+      "code": "IS1128",
+      "name": "Data, Information and Decisions",
+      "units": 4,
+      "completed": false
+    }
+  ]
+}
