@@ -14,3 +14,7 @@ existing completion state.
 Configured each module row's trash button to require confirmation before
 delegating deletion to `ModulesManager.deleteModule`, then refreshing and
 persisting the module list.
+
+Enabled each module row's completion checkbox to delegate checked and
+unchecked states to `ModulesManager.markModuleCompleted` and
+`ModulesManager.markModuleUncompleted`, respectively, and persist the change.

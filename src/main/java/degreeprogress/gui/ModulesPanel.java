@@ -163,6 +163,20 @@ public final class ModulesPanel extends VBox {
         }
     }
 
+    private void updateModuleCompletion(Module module, boolean completed) {
+        try {
+            if (completed) {
+                modulesManager.markModuleCompleted(module.getCode());
+            } else {
+                modulesManager.markModuleUncompleted(module.getCode());
+            }
+            modulesChangedAction.run();
+        } catch (IllegalArgumentException exception) {
+            refresh();
+            showError("Could not update module completion", exception.getMessage());
+        }
+    }
+
     private void showError(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
@@ -187,7 +201,8 @@ public final class ModulesPanel extends VBox {
 
         CheckBox completionCheckbox = new CheckBox();
         completionCheckbox.setSelected(module.isCompleted());
-        completionCheckbox.setDisable(true);
+        completionCheckbox.setOnAction(
+                event -> updateModuleCompletion(module, completionCheckbox.isSelected()));
 
         Button editButton = IconFactory.createIconButton("pencil", "Edit module");
         editButton.setOnAction(event -> showEditModuleDialog(module));
