@@ -39,3 +39,6 @@ saved to the application data file after a module is added.
 Use the pencil icon beside a module to edit its code, name, or number of units.
 The module's completion status is preserved when it is edited. Changes are
 saved to the application data file after a module is edited.
+
+Use the trash icon beside a module to delete it. Deletion must be confirmed
+before it is applied and cannot be undone.

@@ -7,6 +7,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -136,6 +137,32 @@ public final class ModulesPanel extends VBox {
         }
     }
 
+    private void showDeleteConfirmation(Module module) {
+        Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmation.setTitle("Delete module");
+        confirmation.setHeaderText("Delete \"" + module.getCode() + "\"?");
+        confirmation.setContentText("This action cannot be undone.");
+
+        Window owner = getScene() == null ? null : getScene().getWindow();
+        if (owner != null) {
+            confirmation.initOwner(owner);
+        }
+
+        confirmation.showAndWait()
+                .filter(ButtonType.OK::equals)
+                .ifPresent(button -> deleteModule(module));
+    }
+
+    private void deleteModule(Module module) {
+        try {
+            modulesManager.deleteModule(module.getCode());
+            refresh();
+            modulesChangedAction.run();
+        } catch (IllegalArgumentException exception) {
+            showError("Could not delete module", exception.getMessage());
+        }
+    }
+
     private void showError(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
@@ -165,6 +192,7 @@ public final class ModulesPanel extends VBox {
         Button editButton = IconFactory.createIconButton("pencil", "Edit module");
         editButton.setOnAction(event -> showEditModuleDialog(module));
         Button deleteButton = IconFactory.createIconButton("trash", "Delete module");
+        deleteButton.setOnAction(event -> showDeleteConfirmation(module));
         HBox controls = new HBox(CONTROL_SPACING, completionCheckbox, editButton, deleteButton);
         controls.setMinWidth(Region.USE_PREF_SIZE);
         controls.setMaxWidth(Region.USE_PREF_SIZE);

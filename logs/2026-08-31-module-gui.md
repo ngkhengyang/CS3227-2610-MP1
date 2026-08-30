@@ -10,3 +10,7 @@ the application window callback.
 Configured each module row's pencil button to open the pre-populated module
 dialog and delegate edits to `ModulesManager.editModule`, preserving the
 existing completion state.
+
+Configured each module row's trash button to require confirmation before
+delegating deletion to `ModulesManager.deleteModule`, then refreshing and
+persisting the module list.
