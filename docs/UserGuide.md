@@ -2,7 +2,8 @@
 
 ## Current version
 
-The current base version only opens the application window. User-facing features will be documented here as they are implemented.
+The application opens a JavaFX window with editable requirements and module
+records. User-facing features will be documented here as they are implemented.
 
 ## Requirements
 
@@ -27,3 +28,10 @@ unit-count requirements allow their matching module codes, prefixes, and level
 bounds to be edited. Leaf requirement types cannot be changed. Composite
 requirements may be changed between **All child requirements** and **Any child
 requirement**; their existing children are preserved.
+
+## Modules
+
+Use **Add module** at the top right of the Modules panel to record a module.
+Enter its module code, name, and number of units. The number of units must be
+between 1 and 60, and newly added modules start as incomplete. Changes are
+saved to the application data file after a module is added.

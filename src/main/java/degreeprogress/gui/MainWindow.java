@@ -64,7 +64,7 @@ public final class MainWindow extends Application {
         root.setLeft(requirementsPanel);
         root.setCenter(requirementDetailsPanel);
 
-        ModulesPanel modulesPanel = new ModulesPanel(modulesManager);
+        ModulesPanel modulesPanel = new ModulesPanel(modulesManager, this::handleModulesChanged);
         modulesPanel.prefWidthProperty().bind(root.widthProperty().multiply(MODULES_PANEL_WIDTH_RATIO));
         root.setRight(modulesPanel);
 
@@ -80,6 +80,10 @@ public final class MainWindow extends Application {
         if (requirementsPanel != null) {
             requirementsPanel.refresh();
         }
+        saveApplicationData();
+    }
+
+    private void handleModulesChanged() {
         saveApplicationData();
     }
 

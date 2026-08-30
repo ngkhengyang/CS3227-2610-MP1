@@ -5,6 +5,7 @@ import java.util.Objects;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
@@ -15,6 +16,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Window;
 
 import degreeprogress.managers.ModulesManager;
 import degreeprogress.models.modules.Module;
@@ -27,6 +29,13 @@ public final class ModulesPanel extends VBox {
     private static final double MODULE_ITEM_SPACING = 8;
     private static final double MODULE_ITEM_PADDING = 8;
     private static final double CONTROL_SPACING = 6;
+    private static final double HEADER_SPACING = 12;
+
+    private final ModulesManager modulesManager;
+    private final Runnable modulesChangedAction;
+    private final VBox moduleItems;
+    private final ScrollPane moduleList;
+    private final StackPane listContainer;
 
     /**
      * Creates a modules panel populated from the supplied manager.
@@ -34,31 +43,85 @@ public final class ModulesPanel extends VBox {
      * @param modulesManager manager containing the modules to display
      */
     public ModulesPanel(ModulesManager modulesManager) {
+        this(modulesManager, () -> { });
+    }
+
+    /**
+     * Creates a modules panel that refreshes and invokes a callback after a module is added.
+     *
+     * @param modulesManager manager containing the modules to display and mutate
+     * @param modulesChangedAction action to run after a module is added
+     */
+    public ModulesPanel(ModulesManager modulesManager, Runnable modulesChangedAction) {
         Objects.requireNonNull(modulesManager);
+        Objects.requireNonNull(modulesChangedAction);
+        this.modulesManager = modulesManager;
+        this.modulesChangedAction = modulesChangedAction;
 
         Label title = new Label("Modules");
         title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
-        List<Module> modules = modulesManager.getModules();
-        VBox moduleItems = new VBox(MODULE_ITEM_SPACING);
-        moduleItems.setFillWidth(true);
-        modules.forEach(module -> moduleItems.getChildren().add(createModuleItem(module)));
+        Button addButton = IconFactory.createIconButton("plus", "Add module");
+        addButton.setOnAction(event -> showAddModuleDialog());
 
-        ScrollPane moduleList = new ScrollPane(moduleItems);
+        HBox header = new HBox(HEADER_SPACING, title, addButton);
+        HBox.setHgrow(title, Priority.ALWAYS);
+        header.setAlignment(Pos.CENTER_LEFT);
+
+        moduleItems = new VBox(MODULE_ITEM_SPACING);
+        moduleItems.setFillWidth(true);
+
+        moduleList = new ScrollPane(moduleItems);
         moduleList.setFitToWidth(true);
         moduleList.setHbarPolicy(ScrollBarPolicy.NEVER);
         moduleList.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
 
-        StackPane listContainer = new StackPane(moduleList);
-        if (modules.isEmpty()) {
-            listContainer.getChildren().add(new Label("No modules recorded."));
-        }
+        listContainer = new StackPane(moduleList);
+        refresh();
 
         setSpacing(VERTICAL_SPACING);
         setPadding(new Insets(PANEL_PADDING));
         setMinWidth(MIN_PANEL_WIDTH);
-        getChildren().addAll(title, listContainer);
+        getChildren().addAll(header, listContainer);
         VBox.setVgrow(listContainer, Priority.ALWAYS);
+    }
+
+    /** Refreshes the module list from the current modules manager state. */
+    public void refresh() {
+        List<Module> modules = modulesManager.getModules();
+        moduleItems.getChildren().setAll(
+                modules.stream().map(this::createModuleItem).toList());
+        listContainer.getChildren().setAll(moduleList);
+        if (modules.isEmpty()) {
+            Label emptyState = new Label("No modules recorded.");
+            emptyState.setMaxWidth(Double.MAX_VALUE);
+            emptyState.setAlignment(Pos.CENTER);
+            StackPane.setAlignment(emptyState, Pos.CENTER);
+            listContainer.getChildren().add(emptyState);
+        }
+    }
+
+    private void showAddModuleDialog() {
+        Window owner = getScene() == null ? null : getScene().getWindow();
+        ModuleDialog.showAndWait(owner).ifPresent(this::addModule);
+    }
+
+    private void addModule(Module module) {
+        try {
+            modulesManager.addModule(module.getCode(), module.getName(), module.getUnits());
+            refresh();
+            modulesChangedAction.run();
+        } catch (IllegalArgumentException exception) {
+            showError("Could not add module", exception.getMessage());
+        }
+    }
+
+    private void showError(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     private HBox createModuleItem(Module module) {

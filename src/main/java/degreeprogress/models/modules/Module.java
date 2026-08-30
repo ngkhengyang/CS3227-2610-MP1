@@ -8,8 +8,11 @@ package degreeprogress.models.modules;
  * independent values.</p>
  */
 public final class Module {
-    private static final int MIN_UNITS = 1;
-    private static final int MAX_UNITS = 60;
+    /** The smallest number of units a module can have. */
+    public static final int MIN_UNITS = 1;
+
+    /** The largest number of units a module can have. */
+    public static final int MAX_UNITS = 60;
 
     private final ModuleCode code;
     private final String name;
