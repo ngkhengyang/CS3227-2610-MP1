@@ -67,7 +67,7 @@ public final class RequirementsPanel extends VBox {
         Label title = new Label("Requirements");
         title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
-        Button addButton = new Button("Add");
+        Button addButton = IconFactory.createIconButton("plus", "Add requirement");
         addButton.setOnAction(event -> showAddRequirementDialog());
 
         HBox header = new HBox(HEADER_SPACING, title, addButton);

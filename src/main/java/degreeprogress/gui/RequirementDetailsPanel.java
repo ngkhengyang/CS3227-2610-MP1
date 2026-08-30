@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -36,6 +37,7 @@ public final class RequirementDetailsPanel extends VBox {
     private final Label title;
     private final Button addChildButton;
     private final Button editButton;
+    private final Button deleteButton;
     private final VBox details;
     private Requirement selectedRequirement;
 
@@ -58,18 +60,26 @@ public final class RequirementDetailsPanel extends VBox {
 
         title = new Label("Requirement details");
         title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+        title.setMinWidth(0);
+        title.setMaxWidth(Double.MAX_VALUE);
+        title.setWrapText(true);
 
-        addChildButton = new Button("Add child");
+        addChildButton = IconFactory.createIconButton("plus", "Add child requirement", 10);
         addChildButton.setOnAction(event -> showAddChildRequirementDialog());
         addChildButton.setVisible(false);
         addChildButton.setManaged(false);
 
-        editButton = new Button("Edit");
+        editButton = IconFactory.createIconButton("pencil", "Edit requirement");
         editButton.setOnAction(event -> showEditRequirementDialog());
         editButton.setDisable(true);
 
-        HBox header = new HBox(HEADER_SPACING, title, addChildButton, editButton);
+        deleteButton = IconFactory.createIconButton("trash", "Delete requirement");
+        deleteButton.setDisable(true);
+
+        HBox header = new HBox(HEADER_SPACING, title, editButton, deleteButton);
         HBox.setHgrow(title, Priority.ALWAYS);
+        header.setAlignment(Pos.CENTER_LEFT);
+        header.setMaxWidth(Double.MAX_VALUE);
 
         details = new VBox(VERTICAL_SPACING);
         setPadding(new Insets(PANEL_PADDING));
@@ -93,6 +103,7 @@ public final class RequirementDetailsPanel extends VBox {
             title.setText("Requirement details");
             setAddChildButtonVisible(false);
             editButton.setDisable(true);
+            deleteButton.setDisable(true);
             details.getChildren().add(new Label("Select a requirement to view its details."));
             return;
         }
@@ -101,6 +112,7 @@ public final class RequirementDetailsPanel extends VBox {
         setAddChildButtonVisible(requirement instanceof CompositeRequirement
                 && requirementsManager != null);
         editButton.setDisable(requirementsManager == null);
+        deleteButton.setDisable(requirementsManager == null);
         details.getChildren().add(createDetail("Type", getRequirementType(requirement)));
         details.getChildren().add(createDetail("Description", getDescription(requirement)));
         details.getChildren().add(createRequirementDetail(requirement));
@@ -219,10 +231,26 @@ public final class RequirementDetailsPanel extends VBox {
             List<String> childNames = compositeRequirement.getChildren().stream()
                     .map(Requirement::getName)
                     .toList();
+            Label label = new Label("Requirements");
+            label.setStyle("-fx-font-weight: bold;");
+            label.setMinWidth(0);
+            label.setMaxWidth(Double.MAX_VALUE);
+
+            HBox header = new HBox(HEADER_SPACING, label, addChildButton);
+            HBox.setHgrow(label, Priority.ALWAYS);
+            header.setAlignment(Pos.CENTER_LEFT);
+            header.setMaxWidth(Double.MAX_VALUE);
+
             if (!childNames.isEmpty()) {
-                return createListDetail("Requirements", childNames);
+                VBox valueList = new VBox(FIELD_SPACING);
+                for (String childName : childNames) {
+                    Label childLabel = new Label("• " + childName);
+                    childLabel.setWrapText(true);
+                    valueList.getChildren().add(childLabel);
+                }
+                return new VBox(FIELD_SPACING, header, valueList);
             }
-            return createDetail("Requirements", "No child requirements.");
+            return new VBox(FIELD_SPACING, header, new Label("No child requirements."));
         }
         if (requirement instanceof ModuleCountRequirement moduleCountRequirement) {
             return createDetail("Requirements", formatCountRequirement(

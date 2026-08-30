@@ -79,8 +79,8 @@ public final class ModulesPanel extends VBox {
         completionCheckbox.setSelected(module.isCompleted());
         completionCheckbox.setDisable(true);
 
-        Button editButton = new Button("Edit");
-        Button deleteButton = new Button("Delete");
+        Button editButton = IconFactory.createIconButton("pencil", "Edit module");
+        Button deleteButton = IconFactory.createIconButton("trash", "Delete module");
         HBox controls = new HBox(CONTROL_SPACING, completionCheckbox, editButton, deleteButton);
         controls.setMinWidth(Region.USE_PREF_SIZE);
         controls.setMaxWidth(Region.USE_PREF_SIZE);
