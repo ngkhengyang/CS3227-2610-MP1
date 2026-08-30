@@ -22,12 +22,12 @@ import degreeprogress.models.requirements.Requirement;
 import degreeprogress.models.requirements.RequirementDocument;
 import degreeprogress.models.requirements.UnitCountRequirement;
 
-class RequirementStorageTest {
-    private final RequirementStorage storage = new RequirementStorage();
+class RequirementsSerializerTest {
+    private final RequirementsSerializer serializer = new RequirementsSerializer();
 
     @Test
     void serialize_writesPolymorphicTypes() {
-        String serialized = storage.serialize(createPolymorphicDocument());
+        String serialized = serializer.serialize(createPolymorphicDocument());
 
         assertTrue(serialized.contains("\"type\" : \"allOf\""));
         assertTrue(serialized.contains("\"type\" : \"module\""));
@@ -50,7 +50,7 @@ class RequirementStorageTest {
             json = new String(input.readAllBytes(), StandardCharsets.UTF_8);
         }
 
-        RequirementDocument parsed = storage.parse(json);
+        RequirementDocument parsed = serializer.parse(json);
 
         assertEquals(1, parsed.schemaVersion());
         assertEquals("bcomp-cs", parsed.programme().id());
@@ -61,7 +61,7 @@ class RequirementStorageTest {
 
     @Test
     void parse_readsPolymorphicTypesAndFields() {
-        RequirementDocument parsed = storage.parse(createPolymorphicJson());
+        RequirementDocument parsed = serializer.parse(createPolymorphicJson());
         Requirement root = parsed.requirements().get(0);
 
         assertInstanceOf(AllOfRequirement.class, root);
@@ -74,8 +74,23 @@ class RequirementStorageTest {
     }
 
     @Test
+    void serializeAndParse_preservesRequirementDocument() {
+        RequirementDocument original = createPolymorphicDocument();
+
+        RequirementDocument parsed = serializer.parse(serializer.serialize(original));
+        Requirement root = parsed.requirements().get(0);
+        Requirement moduleRequirement = root.getChildren().get(0);
+
+        assertEquals(original.schemaVersion(), parsed.schemaVersion());
+        assertEquals(original.programme().id(), parsed.programme().id());
+        assertEquals(original.sources(), parsed.sources());
+        assertInstanceOf(AllOfRequirement.class, root);
+        assertEquals(Set.of("CS1231S"), ((ModuleRequirement) moduleRequirement).getModuleCodes());
+    }
+
+    @Test
     void parse_rejectsMalformedJsonOrUnknownType() {
-        assertThrows(IllegalArgumentException.class, () -> storage.parse("not json"));
+        assertThrows(IllegalArgumentException.class, () -> serializer.parse("not json"));
 
         String unknownType = """
                 {
@@ -85,7 +100,7 @@ class RequirementStorageTest {
                   "requirements": [{"type":"unknown","id":"r","name":"R"}]
                 }
                 """;
-        assertThrows(IllegalArgumentException.class, () -> storage.parse(unknownType));
+        assertThrows(IllegalArgumentException.class, () -> serializer.parse(unknownType));
     }
 
     private RequirementDocument createPolymorphicDocument() {

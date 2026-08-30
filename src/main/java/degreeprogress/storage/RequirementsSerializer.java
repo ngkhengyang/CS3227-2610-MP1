@@ -26,16 +26,19 @@ import degreeprogress.models.requirements.UnitCountRequirement;
  * Converts the requirement domain model to and from the application's JSON
  * requirement format. This component deliberately has no file-system logic.
  */
-public final class RequirementStorage {
+public final class RequirementsSerializer {
     private final ObjectMapper objectMapper;
 
     /** Creates a requirement JSON converter. */
-    public RequirementStorage() {
+    public RequirementsSerializer() {
         objectMapper = new ObjectMapper();
     }
 
     /** Serializes a complete requirement document as indented JSON. */
     public String serialize(RequirementDocument document) {
+        if (document == null) {
+            throw new IllegalArgumentException("Requirement document must not be null");
+        }
         try {
             return objectMapper.writerWithDefaultPrettyPrinter()
                     .writeValueAsString(writeDocument(document));
