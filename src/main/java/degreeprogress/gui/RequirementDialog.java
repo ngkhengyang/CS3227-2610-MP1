@@ -1,7 +1,9 @@
 package degreeprogress.gui;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -27,13 +29,14 @@ import javafx.stage.Window;
 import degreeprogress.models.modules.ModuleCode;
 import degreeprogress.models.requirements.AllOfRequirement;
 import degreeprogress.models.requirements.AnyOfRequirement;
+import degreeprogress.models.requirements.CompositeRequirement;
 import degreeprogress.models.requirements.ModuleCountRequirement;
 import degreeprogress.models.requirements.ModuleRequirement;
 import degreeprogress.models.requirements.ModuleSelector;
 import degreeprogress.models.requirements.Requirement;
 import degreeprogress.models.requirements.UnitCountRequirement;
 
-/** Displays the shared form used to create root and child requirements. */
+/** Displays the shared form used to create and edit root and child requirements. */
 public final class RequirementDialog {
     private static final double DIALOG_WIDTH = 520;
     private static final double DIALOG_VIEWPORT_HEIGHT = 450;
@@ -62,14 +65,39 @@ public final class RequirementDialog {
      * @return the created requirement, or an empty optional when the dialog is cancelled
      */
     public static Optional<Requirement> showAndWait(Window owner, String dialogTitle) {
-        RequirementForm form = new RequirementForm();
+        return showAndWait(
+                owner,
+                dialogTitle,
+                new RequirementForm(),
+                "Enter the details for the new requirement.");
+    }
+
+    /**
+     * Opens the requirement edit form with the existing values pre-populated.
+     *
+     * @param owner window that owns the dialog, or {@code null} when no owner is available
+     * @param existingRequirement requirement to edit
+     * @return the edited requirement, or an empty optional when the dialog is cancelled
+     */
+    public static Optional<Requirement> showEditAndWait(
+            Window owner, Requirement existingRequirement) {
+        Objects.requireNonNull(existingRequirement);
+        return showAndWait(
+                owner,
+                "Edit requirement",
+                new RequirementForm(existingRequirement),
+                "Update the details for this requirement.");
+    }
+
+    private static Optional<Requirement> showAndWait(
+            Window owner, String dialogTitle, RequirementForm form, String headerText) {
         Label errorMessage = new Label();
         errorMessage.setStyle("-fx-text-fill: #b00020;");
         errorMessage.setWrapText(true);
 
         Dialog<Requirement> dialog = new Dialog<>();
         dialog.setTitle(dialogTitle);
-        dialog.setHeaderText("Enter the details for the new requirement.");
+        dialog.setHeaderText(headerText);
         if (owner == null) {
             dialog.initModality(Modality.APPLICATION_MODAL);
         } else {
@@ -86,20 +114,20 @@ public final class RequirementDialog {
         dialog.getDialogPane().setContent(formScrollPane);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-        AtomicReference<Requirement> createdRequirement = new AtomicReference<>();
+        AtomicReference<Requirement> submittedRequirement = new AtomicReference<>();
         Button okButton = (Button) dialog.getDialogPane().lookupButton(ButtonType.OK);
         okButton.addEventFilter(ActionEvent.ACTION, event -> {
             try {
-                createdRequirement.set(form.createRequirement());
+                submittedRequirement.set(form.createRequirement());
                 errorMessage.setText("");
             } catch (IllegalArgumentException exception) {
-                createdRequirement.set(null);
+                submittedRequirement.set(null);
                 errorMessage.setText(exception.getMessage());
                 event.consume();
             }
         });
         dialog.setResultConverter(buttonType -> buttonType == ButtonType.OK
-                ? createdRequirement.get()
+                ? submittedRequirement.get()
                 : null);
 
         return dialog.showAndWait();
@@ -146,6 +174,9 @@ public final class RequirementDialog {
     }
 
     private static final class RequirementForm {
+        private String requirementId;
+        private boolean editMode;
+
         private final TextField nameField = new TextField();
         private final TextArea descriptionField = new TextArea();
         private final ComboBox<RequirementType> typeSelector = new ComboBox<>();
@@ -160,6 +191,18 @@ public final class RequirementDialog {
         private final TextField maximumCountField = new TextField();
 
         private RequirementForm() {
+            requirementId = UUID.randomUUID().toString();
+            initialiseFields();
+        }
+
+        private RequirementForm(Requirement existingRequirement) {
+            this();
+            requirementId = Objects.requireNonNull(existingRequirement).getId();
+            editMode = true;
+            populate(existingRequirement);
+        }
+
+        private void initialiseFields() {
             nameField.setPromptText("Requirement name");
             descriptionField.setPromptText("Describe what this requirement represents");
             descriptionField.setWrapText(true);
@@ -195,9 +238,73 @@ public final class RequirementDialog {
             case UNIT_COUNT -> addCountFields(
                     "Minimum units (optional)", "Maximum units (optional)");
             case ALL_OF, ANY_OF -> typeSpecificFields.getChildren().add(
-                    new Label("Child requirements can be added after creation."));
+                    new Label(editMode
+                            ? "Child requirements are preserved when editing."
+                            : "Child requirements can be added after creation."));
             default -> throw new IllegalStateException("Unsupported requirement type");
             }
+        }
+
+        private void populate(Requirement existingRequirement) {
+            nameField.setText(existingRequirement.getName());
+            descriptionField.setText(existingRequirement.getDescription());
+
+            RequirementType existingType = getRequirementType(existingRequirement);
+            if (existingRequirement instanceof CompositeRequirement) {
+                typeSelector.getItems().setAll(RequirementType.ALL_OF, RequirementType.ANY_OF);
+                typeSelector.setDisable(false);
+            } else {
+                typeSelector.getItems().setAll(existingType);
+                typeSelector.setDisable(true);
+            }
+            typeSelector.setValue(existingType);
+
+            if (existingRequirement instanceof ModuleRequirement moduleRequirement) {
+                moduleCodesField.setText(joinValues(moduleRequirement.getModuleCodes()));
+            } else if (existingRequirement instanceof ModuleCountRequirement moduleCountRequirement) {
+                populateCountFields(
+                        moduleCountRequirement.getSelector(),
+                        moduleCountRequirement.getMinimumModules(),
+                        moduleCountRequirement.getMaximumModules());
+            } else if (existingRequirement instanceof UnitCountRequirement unitCountRequirement) {
+                populateCountFields(
+                        unitCountRequirement.getSelector(),
+                        unitCountRequirement.getMinimumUnits(),
+                        unitCountRequirement.getMaximumUnits());
+            }
+        }
+
+        private RequirementType getRequirementType(Requirement requirement) {
+            if (requirement instanceof ModuleRequirement) {
+                return RequirementType.SPECIFIC_MODULES;
+            }
+            if (requirement instanceof ModuleCountRequirement) {
+                return RequirementType.MODULE_COUNT;
+            }
+            if (requirement instanceof UnitCountRequirement) {
+                return RequirementType.UNIT_COUNT;
+            }
+            if (requirement instanceof AllOfRequirement) {
+                return RequirementType.ALL_OF;
+            }
+            if (requirement instanceof AnyOfRequirement) {
+                return RequirementType.ANY_OF;
+            }
+            throw new IllegalArgumentException("Unsupported requirement type");
+        }
+
+        private void populateCountFields(
+                ModuleSelector selector, int minimumCount, Integer maximumCount) {
+            minimumCountField.setText(Integer.toString(minimumCount));
+            maximumCountField.setText(formatOptionalInteger(maximumCount));
+            selectorCodesField.setText(joinValues(selector.getModuleCodes()));
+            selectorPrefixesField.setText(joinValues(selector.getCodePrefixes()));
+            minimumLevelField.setText(formatOptionalInteger(selector.getMinimumLevel()));
+            maximumLevelField.setText(formatOptionalInteger(selector.getMaximumLevel()));
+        }
+
+        private String formatOptionalInteger(Integer value) {
+            return value == null ? "" : Integer.toString(value);
         }
 
         private void addCountFields(String minimumLabel, String maximumLabel) {
@@ -216,7 +323,6 @@ public final class RequirementDialog {
         private Requirement createRequirement() {
             String name = requireText(nameField.getText(), "Name");
             String description = descriptionField.getText().trim();
-            String id = UUID.randomUUID().toString();
             RequirementType selectedType = typeSelector.getValue();
             if (selectedType == null) {
                 throw new IllegalArgumentException("Type is required");
@@ -224,25 +330,31 @@ public final class RequirementDialog {
 
             return switch (selectedType) {
             case SPECIFIC_MODULES -> new ModuleRequirement(
-                    id, name, description,
+                    requirementId, name, description,
                     parseModuleCodes(moduleCodesField.getText(), "Module codes", true));
             case MODULE_COUNT -> new ModuleCountRequirement(
-                    id,
+                    requirementId,
                     name,
                     description,
                     createSelector(),
                     parseIntegerOrDefault(minimumCountField.getText(), "Minimum modules"),
                     parseOptionalInteger(maximumCountField.getText(), "Maximum modules"));
             case UNIT_COUNT -> new UnitCountRequirement(
-                    id,
+                    requirementId,
                     name,
                     description,
                     createSelector(),
                     parseIntegerOrDefault(minimumCountField.getText(), "Minimum units"),
                     parseOptionalInteger(maximumCountField.getText(), "Maximum units"));
-            case ALL_OF -> new AllOfRequirement(id, name, description, List.of());
-            case ANY_OF -> new AnyOfRequirement(id, name, description, List.of());
+            case ALL_OF -> new AllOfRequirement(requirementId, name, description, List.of());
+            case ANY_OF -> new AnyOfRequirement(requirementId, name, description, List.of());
             };
+        }
+
+        private String joinValues(Iterable<String> values) {
+            List<String> sortedValues = new ArrayList<>();
+            values.forEach(sortedValues::add);
+            return String.join(", ", sortedValues.stream().sorted().toList());
         }
 
         private ModuleSelector createSelector() {

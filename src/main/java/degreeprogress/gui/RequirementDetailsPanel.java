@@ -24,7 +24,7 @@ import degreeprogress.models.requirements.ModuleSelector;
 import degreeprogress.models.requirements.Requirement;
 import degreeprogress.models.requirements.UnitCountRequirement;
 
-/** Displays read-only details for the requirement selected in the tree. */
+/** Displays details and editing actions for the requirement selected in the tree. */
 public final class RequirementDetailsPanel extends VBox {
     private static final double PANEL_PADDING = 20;
     private static final double VERTICAL_SPACING = 16;
@@ -45,10 +45,10 @@ public final class RequirementDetailsPanel extends VBox {
     }
 
     /**
-     * Creates a requirement details panel that can add children to composite requirements.
+     * Creates a requirement details panel that can edit requirements and add children to composites.
      *
      * @param requirementsManager manager containing the requirements to edit
-     * @param requirementsChangedAction action to run after a child is added
+     * @param requirementsChangedAction action to run after a requirement is mutated
      */
     public RequirementDetailsPanel(
             RequirementsManager requirementsManager,
@@ -65,6 +65,7 @@ public final class RequirementDetailsPanel extends VBox {
         addChildButton.setManaged(false);
 
         editButton = new Button("Edit");
+        editButton.setOnAction(event -> showEditRequirementDialog());
         editButton.setDisable(true);
 
         HBox header = new HBox(HEADER_SPACING, title, addChildButton, editButton);
@@ -99,7 +100,7 @@ public final class RequirementDetailsPanel extends VBox {
         title.setText(requirement.getName());
         setAddChildButtonVisible(requirement instanceof CompositeRequirement
                 && requirementsManager != null);
-        editButton.setDisable(false);
+        editButton.setDisable(requirementsManager == null);
         details.getChildren().add(createDetail("Type", getRequirementType(requirement)));
         details.getChildren().add(createDetail("Description", getDescription(requirement)));
         details.getChildren().add(createRequirementDetail(requirement));
@@ -129,6 +130,27 @@ public final class RequirementDetailsPanel extends VBox {
             setRequirement(parent);
         } catch (IllegalArgumentException exception) {
             showError("Could not add child requirement", exception.getMessage());
+        }
+    }
+
+    private void showEditRequirementDialog() {
+        if (selectedRequirement == null || requirementsManager == null) {
+            return;
+        }
+
+        Window owner = getScene() == null ? null : getScene().getWindow();
+        RequirementDialog.showEditAndWait(owner, selectedRequirement)
+                .ifPresent(this::editRequirement);
+    }
+
+    private void editRequirement(Requirement editedRequirement) {
+        try {
+            Requirement updatedRequirement = requirementsManager.editRequirement(
+                    selectedRequirement.getId(), editedRequirement);
+            requirementsChangedAction.run();
+            setRequirement(updatedRequirement);
+        } catch (IllegalArgumentException exception) {
+            showError("Could not edit requirement", exception.getMessage());
         }
     }
 

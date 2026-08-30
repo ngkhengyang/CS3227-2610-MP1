@@ -51,7 +51,7 @@ public final class RequirementsPanel extends VBox {
      *
      * @param requirementsManager manager containing the requirements to display
      * @param requirementSelectionAction action to run when a requirement is selected
-     * @param requirementsChangedAction action to run after a requirement is added
+     * @param requirementsChangedAction action to run after a requirement is mutated
      */
     public RequirementsPanel(
             RequirementsManager requirementsManager,
@@ -93,6 +93,7 @@ public final class RequirementsPanel extends VBox {
 
     /** Refreshes the tree from the current requirements manager state. */
     public void refresh() {
+        String selectedRequirementId = getSelectedRequirementId();
         List<Requirement> rootRequirements = requirementsManager.getRequirements();
         requirementTree.setRoot(createRequirementTree(rootRequirements));
         treeContainer.getChildren().setAll(requirementTree);
@@ -102,6 +103,9 @@ public final class RequirementsPanel extends VBox {
             emptyState.setAlignment(Pos.CENTER);
             StackPane.setAlignment(emptyState, Pos.CENTER);
             treeContainer.getChildren().add(emptyState);
+        }
+        if (selectedRequirementId != null) {
+            selectRequirement(selectedRequirementId);
         }
     }
 
@@ -123,6 +127,14 @@ public final class RequirementsPanel extends VBox {
 
     private void selectRequirement(String requirementId) {
         selectRequirement(requirementTree.getRoot(), requirementId);
+    }
+
+    private String getSelectedRequirementId() {
+        TreeItem<Requirement> selectedItem = requirementTree.getSelectionModel().getSelectedItem();
+        if (selectedItem == null || selectedItem.getValue() == null) {
+            return null;
+        }
+        return selectedItem.getValue().getId();
     }
 
     private boolean selectRequirement(TreeItem<Requirement> treeItem, String requirementId) {

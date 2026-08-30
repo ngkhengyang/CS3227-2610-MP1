@@ -19,10 +19,13 @@ If the Gradle Wrapper has been generated, use `gradlew.bat` on Windows or
 
 Keep the project divided into domain models, application services, persistence, and JavaFX presentation code. JavaFX controllers and views should not contain requirement-evaluation rules or file-format details.
 
-The requirements UI uses `RequirementDialog` for both root and child creation.
-`RequirementsPanel` owns root insertion and tree refresh, while
-`RequirementDetailsPanel` owns child insertion for the selected composite.
-`MainWindow` coordinates persistence after either mutation.
+The requirements UI uses `RequirementDialog` for root and child creation as
+well as editing. Edit forms are pre-populated from the selected requirement,
+preserve its ID, and restrict type choices to those accepted by
+`RequirementsManager.editRequirement`. `RequirementsPanel` owns root insertion
+and tree refresh, while `RequirementDetailsPanel` owns editing and child
+insertion for the selected requirement. `MainWindow` coordinates persistence
+after either mutation.
 
 ## Persistence direction
 

@@ -10,3 +10,10 @@ Follow-up validation changes made minimum module/unit counts optional in the
 GUI, defaulting blank values to zero, and validated module codes and prefixes
 in both the dialog and domain models. Existing NUS suffix forms such as
 `CS2040S` remain supported.
+
+Implemented requirement editing using the existing requirement dialog and form.
+Edit forms preserve requirement IDs, pre-populate module codes, selector codes,
+prefixes, level bounds, and count bounds, and restrict type choices according to
+`RequirementsManager.editRequirement`. Composite children remain preserved when
+switching between all-of and any-of requirements. The requirements tree now
+preserves the selected requirement across refreshes.
