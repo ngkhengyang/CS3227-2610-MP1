@@ -17,6 +17,10 @@ requirement**) is selected, use **Add child** in the requirement details panel
 to add a nested requirement using the same form. Changes are saved to the
 application data file after a requirement is added or edited.
 
+Select any requirement and use the trash icon in the requirement details panel
+to delete it. Deleting a composite requirement also deletes all of its child
+requirements. Deletion must be confirmed before it is applied.
+
 Select any requirement and use **Edit** in the requirement details panel to
 change its name, description, or type-specific values. Module-count and
 unit-count requirements allow their matching module codes, prefixes, and level

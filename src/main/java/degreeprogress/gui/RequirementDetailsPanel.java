@@ -9,6 +9,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -75,6 +76,7 @@ public final class RequirementDetailsPanel extends VBox {
 
         deleteButton = IconFactory.createIconButton("trash", "Delete requirement");
         deleteButton.setDisable(true);
+        deleteButton.setOnAction(event -> showDeleteConfirmation());
 
         HBox header = new HBox(HEADER_SPACING, title, editButton, deleteButton);
         HBox.setHgrow(title, Priority.ALWAYS);
@@ -153,6 +155,39 @@ public final class RequirementDetailsPanel extends VBox {
         Window owner = getScene() == null ? null : getScene().getWindow();
         RequirementDialog.showEditAndWait(owner, selectedRequirement)
                 .ifPresent(this::editRequirement);
+    }
+
+    private void showDeleteConfirmation() {
+        if (selectedRequirement == null || requirementsManager == null) {
+            return;
+        }
+
+        Requirement requirementToDelete = selectedRequirement;
+        Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmation.setTitle("Delete requirement");
+        confirmation.setHeaderText("Delete \"" + requirementToDelete.getName() + "\"?");
+        confirmation.setContentText(requirementToDelete instanceof CompositeRequirement
+                ? "This will also delete all child requirements."
+                : "This action cannot be undone.");
+
+        Window owner = getScene() == null ? null : getScene().getWindow();
+        if (owner != null) {
+            confirmation.initOwner(owner);
+        }
+
+        confirmation.showAndWait()
+                .filter(ButtonType.OK::equals)
+                .ifPresent(button -> deleteRequirement(requirementToDelete));
+    }
+
+    private void deleteRequirement(Requirement requirement) {
+        try {
+            requirementsManager.deleteRequirement(requirement.getId());
+            setRequirement(null);
+            requirementsChangedAction.run();
+        } catch (IllegalArgumentException exception) {
+            showError("Could not delete requirement", exception.getMessage());
+        }
     }
 
     private void editRequirement(Requirement editedRequirement) {

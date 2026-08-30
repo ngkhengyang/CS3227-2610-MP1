@@ -197,6 +197,20 @@ class RequirementsManagerTest {
     }
 
     @Test
+    void deleteRequirement_removesCompositeChildWithDescendants() {
+        Requirement nestedChild = new ModuleRequirement(
+                "nested-child", "Nested child", "", Set.of("CS1231S"));
+        AllOfRequirement child = new AllOfRequirement(
+                "child", "Child", "", List.of(nestedChild));
+        AllOfRequirement parent = new AllOfRequirement(
+                "parent", "Parent", "", List.of(child));
+        RequirementsManager manager = new RequirementsManager(List.of(parent));
+
+        assertSame(child, manager.deleteRequirement("child"));
+        assertTrue(parent.getChildren().isEmpty());
+    }
+
+    @Test
     void deleteRequirement_rejectsNullOrBlankId() {
         Requirement leaf = new ModuleRequirement(
                 "leaf", "Leaf", "", Set.of("CS1231S"));

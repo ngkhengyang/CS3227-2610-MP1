@@ -17,3 +17,8 @@ prefixes, level bounds, and count bounds, and restrict type choices according to
 `RequirementsManager.editRequirement`. Composite children remain preserved when
 switching between all-of and any-of requirements. The requirements tree now
 preserves the selected requirement across refreshes.
+
+Implemented requirement deletion from the details panel. The trash button now
+confirms the action, delegates deletion by ID to `RequirementsManager`, clears
+the details view, refreshes the tree, and persists the updated requirements.
+Composite and nested-child deletion behavior is covered by manager tests.

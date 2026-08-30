@@ -24,8 +24,10 @@ well as editing. Edit forms are pre-populated from the selected requirement,
 preserve its ID, and restrict type choices to those accepted by
 `RequirementsManager.editRequirement`. `RequirementsPanel` owns root insertion
 and tree refresh, while `RequirementDetailsPanel` owns editing and child
-insertion for the selected requirement. `MainWindow` coordinates persistence
-after either mutation.
+insertion and deletion for the selected requirement. Deletion is delegated to
+`RequirementsManager.deleteRequirement`, which removes either a root
+requirement or a descendant from its composite parent. `MainWindow` coordinates
+persistence after any mutation.
 
 ## Persistence direction
 
