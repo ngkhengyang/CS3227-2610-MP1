@@ -106,6 +106,12 @@ public final class ModulesPanel extends VBox {
         ModuleDialog.showAndWait(owner).ifPresent(this::addModule);
     }
 
+    private void showEditModuleDialog(Module module) {
+        Window owner = getScene() == null ? null : getScene().getWindow();
+        ModuleDialog.showEditAndWait(owner, module)
+                .ifPresent(editedModule -> editModule(module, editedModule));
+    }
+
     private void addModule(Module module) {
         try {
             modulesManager.addModule(module.getCode(), module.getName(), module.getUnits());
@@ -113,6 +119,20 @@ public final class ModulesPanel extends VBox {
             modulesChangedAction.run();
         } catch (IllegalArgumentException exception) {
             showError("Could not add module", exception.getMessage());
+        }
+    }
+
+    private void editModule(Module existingModule, Module editedModule) {
+        try {
+            modulesManager.editModule(
+                    existingModule.getCode(),
+                    editedModule.getCode(),
+                    editedModule.getName(),
+                    editedModule.getUnits());
+            refresh();
+            modulesChangedAction.run();
+        } catch (IllegalArgumentException exception) {
+            showError("Could not edit module", exception.getMessage());
         }
     }
 
@@ -143,6 +163,7 @@ public final class ModulesPanel extends VBox {
         completionCheckbox.setDisable(true);
 
         Button editButton = IconFactory.createIconButton("pencil", "Edit module");
+        editButton.setOnAction(event -> showEditModuleDialog(module));
         Button deleteButton = IconFactory.createIconButton("trash", "Delete module");
         HBox controls = new HBox(CONTROL_SPACING, completionCheckbox, editButton, deleteButton);
         controls.setMinWidth(Region.USE_PREF_SIZE);

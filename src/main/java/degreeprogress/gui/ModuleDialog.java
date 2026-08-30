@@ -1,5 +1,6 @@
 package degreeprogress.gui;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -20,7 +21,7 @@ import javafx.stage.Window;
 
 import degreeprogress.models.modules.Module;
 
-/** Displays the form used to create a module. */
+/** Displays the form used to create and edit a module. */
 public final class ModuleDialog {
     private static final double DIALOG_WIDTH = 420;
     private static final double CONTENT_SPACING = 12;
@@ -36,14 +37,38 @@ public final class ModuleDialog {
      * @return the entered module, or an empty optional when the dialog is cancelled
      */
     public static Optional<Module> showAndWait(Window owner) {
-        ModuleForm form = new ModuleForm();
+        return showAndWait(
+                owner,
+                "Add module",
+                new ModuleForm(),
+                "Enter the details for the new module.");
+    }
+
+    /**
+     * Opens the module edit form with the existing values pre-populated.
+     *
+     * @param owner window that owns the dialog, or {@code null} when no owner is available
+     * @param existingModule module to edit
+     * @return the edited module, or an empty optional when the dialog is cancelled
+     */
+    public static Optional<Module> showEditAndWait(Window owner, Module existingModule) {
+        Objects.requireNonNull(existingModule);
+        return showAndWait(
+                owner,
+                "Edit module",
+                new ModuleForm(existingModule),
+                "Update the details for this module.");
+    }
+
+    private static Optional<Module> showAndWait(
+            Window owner, String dialogTitle, ModuleForm form, String headerText) {
         Label errorMessage = new Label();
         errorMessage.setStyle("-fx-text-fill: #b00020;");
         errorMessage.setWrapText(true);
 
         Dialog<Module> dialog = new Dialog<>();
-        dialog.setTitle("Add module");
-        dialog.setHeaderText("Enter the details for the new module.");
+        dialog.setTitle(dialogTitle);
+        dialog.setHeaderText(headerText);
         if (owner == null) {
             dialog.initModality(Modality.APPLICATION_MODAL);
         } else {
@@ -102,6 +127,14 @@ public final class ModuleDialog {
             nameField.setPromptText("e.g. Data Structures and Algorithms");
             unitsSpinner.setEditable(true);
             unitsSpinner.getEditor().setPromptText("Number of units");
+        }
+
+        private ModuleForm(Module existingModule) {
+            this();
+            Module module = Objects.requireNonNull(existingModule);
+            codeField.setText(module.getCode());
+            nameField.setText(module.getName());
+            unitsSpinner.getValueFactory().setValue(module.getUnits());
         }
 
         private Module createModule() {

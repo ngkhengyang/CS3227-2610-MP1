@@ -35,3 +35,7 @@ Use **Add module** at the top right of the Modules panel to record a module.
 Enter its module code, name, and number of units. The number of units must be
 between 1 and 60, and newly added modules start as incomplete. Changes are
 saved to the application data file after a module is added.
+
+Use the pencil icon beside a module to edit its code, name, or number of units.
+The module's completion status is preserved when it is edited. Changes are
+saved to the application data file after a module is edited.
