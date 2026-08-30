@@ -55,8 +55,15 @@ class RequirementsSerializerTest {
         assertEquals(1, parsed.schemaVersion());
         assertEquals("bcomp-cs", parsed.programme().id());
         assertEquals(160, parsed.programme().totalUnits());
-        assertEquals(1, parsed.requirements().size());
-        assertEquals(30, countRequirements(parsed.requirements()));
+        assertEquals(4, parsed.requirements().size());
+        assertEquals(
+                List.of(
+                        "common-curriculum",
+                        "programme-requirements",
+                        "unrestricted-electives",
+                        "degree-total"),
+                parsed.requirements().stream().map(Requirement::getId).toList());
+        assertEquals(29, countRequirements(parsed.requirements()));
     }
 
     @Test

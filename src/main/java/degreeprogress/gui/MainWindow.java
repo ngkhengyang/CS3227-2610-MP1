@@ -1,5 +1,7 @@
 package degreeprogress.gui;
 
+import java.nio.file.Path;
+
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -26,10 +28,21 @@ public final class MainWindow extends Application {
     private static final double INITIAL_HEIGHT = 640;
     private static final double REQUIREMENTS_PANEL_WIDTH_RATIO = 0.35;
 
+    private final Path dataFile;
     private StorageManager storageManager;
     private ModulesManager modulesManager;
     private RequirementsManager requirementsManager;
     private ApplicationData applicationData;
+
+    /** Creates the main window using the default application data file. */
+    public MainWindow() {
+        this(null);
+    }
+
+    /** Creates the main window using the supplied application data file. */
+    public MainWindow(Path dataFile) {
+        this.dataFile = dataFile;
+    }
 
     @Override
     public void start(Stage stage) {
@@ -55,7 +68,9 @@ public final class MainWindow extends Application {
     }
 
     private void initialiseApplicationData() {
-        storageManager = new StorageManager();
+        storageManager = dataFile == null
+                ? new StorageManager()
+                : new StorageManager(dataFile);
         applicationData = storageManager.load();
         modulesManager = new ModulesManager(applicationData.modules().modules());
         requirementsManager = new RequirementsManager(

@@ -2,7 +2,6 @@ package degreeprogress.gui;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -70,7 +69,8 @@ public final class RequirementDetailsPanel extends VBox {
         editButton.setDisable(false);
         details.getChildren().add(createDetail("Type", getRequirementType(requirement)));
         details.getChildren().add(createDetail("Description", getDescription(requirement)));
-        details.getChildren().add(createDetail("Configuration", getConfiguration(requirement)));
+        details.getChildren().add(createRequirementDetail(requirement));
+        addSelectorDetails(requirement);
     }
 
     private VBox createDetail(String labelText, String valueText) {
@@ -81,6 +81,20 @@ public final class RequirementDetailsPanel extends VBox {
         value.setWrapText(true);
 
         return new VBox(FIELD_SPACING, label, value);
+    }
+
+    private VBox createListDetail(String labelText, List<String> values) {
+        Label label = new Label(labelText);
+        label.setStyle("-fx-font-weight: bold;");
+
+        VBox valueList = new VBox(FIELD_SPACING);
+        for (String entry : values) {
+            Label entryLabel = new Label("• " + entry);
+            entryLabel.setWrapText(true);
+            valueList.getChildren().add(entryLabel);
+        }
+
+        return new VBox(FIELD_SPACING, label, valueList);
     }
 
     private String getDescription(Requirement requirement) {
@@ -105,53 +119,92 @@ public final class RequirementDetailsPanel extends VBox {
         return "Unit count";
     }
 
-    private String getConfiguration(Requirement requirement) {
+    private VBox createRequirementDetail(Requirement requirement) {
         if (requirement instanceof ModuleRequirement moduleRequirement) {
-            return "Modules: " + moduleRequirement.getModuleCodes().stream()
-                    .sorted()
-                    .collect(Collectors.joining(", "));
+            List<String> moduleDescriptions = sortedValues(moduleRequirement.getModuleCodes()).stream()
+                    .map(moduleCode -> "Complete: " + moduleCode)
+                    .toList();
+            return createListDetail("Requirements", moduleDescriptions);
+        }
+        if (requirement instanceof CompositeRequirement compositeRequirement) {
+            List<String> childNames = compositeRequirement.getChildren().stream()
+                    .map(Requirement::getName)
+                    .toList();
+            if (!childNames.isEmpty()) {
+                return createListDetail("Requirements", childNames);
+            }
+            return createDetail("Requirements", "No child requirements.");
         }
         if (requirement instanceof ModuleCountRequirement moduleCountRequirement) {
-            return "Minimum modules: " + moduleCountRequirement.getMinimumModules()
-                    + "; Maximum modules: "
-                    + formatOptionalNumber(moduleCountRequirement.getMaximumModules())
-                    + "; Selector: " + formatSelector(moduleCountRequirement.getSelector());
+            return createDetail("Requirements", formatCountRequirement(
+                    "module", moduleCountRequirement.getMinimumModules(),
+                    moduleCountRequirement.getMaximumModules()));
+        }
+        UnitCountRequirement unitCountRequirement = (UnitCountRequirement) requirement;
+        return createDetail("Requirements", formatCountRequirement(
+                    "unit", unitCountRequirement.getMinimumUnits(),
+                    unitCountRequirement.getMaximumUnits()));
+    }
+
+    private void addSelectorDetails(Requirement requirement) {
+        ModuleSelector selector = getSelector(requirement);
+        if (selector == null) {
+            return;
+        }
+
+        if (!selector.getCodePrefixes().isEmpty()) {
+            details.getChildren().add(createListDetail(
+                    "Module prefixes:", sortedValues(selector.getCodePrefixes())));
+        }
+        if (!selector.getModuleCodes().isEmpty()) {
+            details.getChildren().add(createListDetail(
+                    "Valid modules:", sortedValues(selector.getModuleCodes())));
+        }
+        if (selector.getMinimumLevel() != null || selector.getMaximumLevel() != null) {
+            details.getChildren().add(createDetail("Module levels:", formatModuleLevels(selector)));
+        }
+    }
+
+    private ModuleSelector getSelector(Requirement requirement) {
+        if (requirement instanceof ModuleCountRequirement moduleCountRequirement) {
+            return moduleCountRequirement.getSelector();
         }
         if (requirement instanceof UnitCountRequirement unitCountRequirement) {
-            return "Minimum units: " + unitCountRequirement.getMinimumUnits()
-                    + "; Maximum units: "
-                    + formatOptionalNumber(unitCountRequirement.getMaximumUnits())
-                    + "; Selector: " + formatSelector(unitCountRequirement.getSelector());
+            return unitCountRequirement.getSelector();
         }
-        return formatChildren((CompositeRequirement) requirement);
+        return null;
     }
 
-    private String formatOptionalNumber(Integer value) {
-        return value == null ? "None" : value.toString();
+    private String formatCountRequirement(String unit, int minimum, Integer maximum) {
+        if (maximum == null) {
+            return "At least " + minimum + " " + pluralize(unit, minimum) + " taken";
+        }
+        if (minimum == maximum) {
+            return "Exactly " + minimum + " " + pluralize(unit, minimum) + " taken";
+        }
+        if (minimum == 0) {
+            return "At most " + maximum + " " + pluralize(unit, maximum) + " taken";
+        }
+        return minimum + " to " + maximum + " " + pluralize(unit, maximum) + " taken";
     }
 
-    private String formatSelector(ModuleSelector selector) {
-        List<String> criteria = new ArrayList<>();
-        if (!selector.getModuleCodes().isEmpty()) {
-            criteria.add("codes " + String.join(", ", selector.getModuleCodes().stream().sorted().toList()));
-        }
-        if (!selector.getCodePrefixes().isEmpty()) {
-            criteria.add("prefixes "
-                    + String.join(", ", selector.getCodePrefixes().stream().sorted().toList()));
-        }
-        if (selector.getMinimumLevel() != null) {
-            criteria.add("minimum level " + selector.getMinimumLevel());
-        }
-        if (selector.getMaximumLevel() != null) {
-            criteria.add("maximum level " + selector.getMaximumLevel());
-        }
-        return criteria.isEmpty() ? "all modules" : String.join("; ", criteria);
+    private String pluralize(String unit, int count) {
+        return count == 1 ? unit : unit + "s";
     }
 
-    private String formatChildren(CompositeRequirement requirement) {
-        List<String> childNames = requirement.getChildren().stream()
-                .map(Requirement::getName)
-                .toList();
-        return childNames.isEmpty() ? "No child requirements." : String.join(", ", childNames);
+    private String formatModuleLevels(ModuleSelector selector) {
+        if (selector.getMinimumLevel() == null) {
+            return "At most " + selector.getMaximumLevel();
+        }
+        if (selector.getMaximumLevel() == null) {
+            return "At least " + selector.getMinimumLevel();
+        }
+        return selector.getMinimumLevel() + " to " + selector.getMaximumLevel();
+    }
+
+    private List<String> sortedValues(Iterable<String> values) {
+        List<String> sortedValues = new ArrayList<>();
+        values.forEach(sortedValues::add);
+        return sortedValues.stream().sorted().toList();
     }
 }

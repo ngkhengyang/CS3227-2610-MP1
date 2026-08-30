@@ -94,6 +94,22 @@ class StorageManagerTest {
         assertThrows(IllegalArgumentException.class, () -> storageManager.save(applicationData));
     }
 
+    @Test
+    void defaultConstructor_usesDefaultApplicationDataFileName() {
+        StorageManager storageManager = new StorageManager();
+
+        assertEquals("application-data.json", storageManager.getDataFile().getFileName().toString());
+    }
+
+    @Test
+    void pathConstructor_usesSuppliedApplicationDataFile() {
+        Path dataFile = temporaryDirectory.resolve("custom/application-data.json");
+
+        StorageManager storageManager = new StorageManager(dataFile);
+
+        assertEquals(dataFile.toAbsolutePath().normalize(), storageManager.getDataFile());
+    }
+
     private ApplicationData createApplicationData() {
         ModuleDocument modules = new ModuleDocument(
                 1,

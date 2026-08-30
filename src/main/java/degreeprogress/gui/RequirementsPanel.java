@@ -1,5 +1,6 @@
 package degreeprogress.gui;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -36,8 +37,9 @@ public final class RequirementsPanel extends VBox {
         Label title = new Label("Requirements");
         title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
+        List<Requirement> rootRequirements = requirementsManager.getRequirements();
         TreeView<Requirement> requirementTree = new TreeView<>(
-                createRequirementTree(requirementsManager));
+                createRequirementTree(rootRequirements));
         requirementTree.setShowRoot(false);
         requirementTree.setCellFactory(tree -> createRequirementTreeCell());
         requirementTree.getSelectionModel().selectedItemProperty().addListener(
@@ -45,7 +47,7 @@ public final class RequirementsPanel extends VBox {
                         selectedItem == null ? null : selectedItem.getValue()));
 
         StackPane treeContainer = new StackPane(requirementTree);
-        if (requirementsManager.getRequirements().isEmpty()) {
+        if (rootRequirements.isEmpty()) {
             treeContainer.getChildren().add(new Label("No requirements configured."));
         }
 
@@ -56,10 +58,9 @@ public final class RequirementsPanel extends VBox {
         VBox.setVgrow(treeContainer, Priority.ALWAYS);
     }
 
-    private TreeItem<Requirement> createRequirementTree(
-            RequirementsManager requirementsManager) {
+    private TreeItem<Requirement> createRequirementTree(List<Requirement> rootRequirements) {
         TreeItem<Requirement> hiddenRoot = new TreeItem<>();
-        for (Requirement requirement : requirementsManager.getRequirements()) {
+        for (Requirement requirement : rootRequirements) {
             hiddenRoot.getChildren().add(createRequirementTreeItem(requirement));
         }
         return hiddenRoot;

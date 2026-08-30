@@ -17,12 +17,6 @@
     "https://www.nus.edu.sg/registrar/academic-information-policies/undergraduate-students/general-education/list-of-courses-approved-under-the-ge-pillars"
   ],
   "requirements": [
-    {
-      "type": "allOf",
-      "id": "bcomp-cs-degree",
-      "name": "BComp (Computer Science)",
-      "description": "The degree requires at least 160 units.",
-      "children": [
         {
           "type": "allOf",
           "id": "common-curriculum",
@@ -315,7 +309,5 @@
           "selector": {},
           "minimumUnits": 160
         }
-      ]
-    }
   ]
 }
