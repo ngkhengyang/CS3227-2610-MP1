@@ -35,6 +35,11 @@ Selectors support the fields currently implemented by `ModuleSelector`:
 Module codes remain strings. Empty selectors match every module. A selector
 matches a module only when all populated selector fields match.
 
+Module codes are validated as a leading alphabetic prefix followed by one or
+more digits and an optional alphabetic suffix. Code prefixes must contain
+letters only. Special symbols and malformed letter/number ordering are
+rejected.
+
 ## Scope of the sample
 
 The sample uses one valid course as a representative choice for each GE

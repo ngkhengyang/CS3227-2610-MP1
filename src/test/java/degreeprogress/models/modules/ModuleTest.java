@@ -64,6 +64,8 @@ class ModuleTest {
         assertThrows(IllegalArgumentException.class, () -> new ModuleCode("2040"));
         assertThrows(IllegalArgumentException.class, () -> new ModuleCode("CS"));
         assertThrows(IllegalArgumentException.class, () -> new ModuleCode("C-2040"));
+        assertThrows(IllegalArgumentException.class, () -> new ModuleCode("CS2040-"));
+        assertThrows(IllegalArgumentException.class, () -> new ModuleCode("CS20A40"));
         assertThrows(IllegalArgumentException.class, () -> new ModuleCode("   "));
         assertThrows(IllegalArgumentException.class, () -> new ModuleCode("CS2040").startsWith(" "));
     }

@@ -26,6 +26,12 @@ class RequirementTest {
     }
 
     @Test
+    void moduleRequirementConstructor_rejectsInvalidCodes() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new ModuleRequirement("id", "name", "", Set.of("CS-2040")));
+    }
+
+    @Test
     void unitCountConstructor_rejectsInvalidBounds() {
         assertThrows(IllegalArgumentException.class,
                 () -> new UnitCountRequirement("id", "name", "", null, 8, 4));
@@ -35,6 +41,16 @@ class RequirementTest {
     void moduleSelectorConstructor_rejectsReversedLevels() {
         assertThrows(IllegalArgumentException.class,
                 () -> new ModuleSelector(Set.of(), Set.of(), 4000, 3000));
+    }
+
+    @Test
+    void moduleSelectorConstructor_rejectsInvalidCodesAndPrefixes() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new ModuleSelector(Set.of("CS2040-"), Set.of(), null, null));
+        assertThrows(IllegalArgumentException.class,
+                () -> new ModuleSelector(Set.of(), Set.of("CS1"), null, null));
+        assertThrows(IllegalArgumentException.class,
+                () -> new ModuleSelector(Set.of(), Set.of("C-S"), null, null));
     }
 
     @Test

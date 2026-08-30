@@ -1,8 +1,9 @@
 package degreeprogress.models.requirements;
 
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Set;
+
+import degreeprogress.models.modules.ModuleCode;
 
 /** A requirement for a fixed set of modules, all of which must be completed. */
 public final class ModuleRequirement extends Requirement {
@@ -34,7 +35,7 @@ public final class ModuleRequirement extends Requirement {
             if (code == null || code.isBlank()) {
                 throw new IllegalArgumentException("Module codes must not be blank");
             }
-            normalized.add(code.trim().toUpperCase(Locale.ROOT));
+            normalized.add(new ModuleCode(code).value());
         }
         this.moduleCodes = Set.copyOf(normalized);
     }

@@ -19,6 +19,11 @@ If the Gradle Wrapper has been generated, use `gradlew.bat` on Windows or
 
 Keep the project divided into domain models, application services, persistence, and JavaFX presentation code. JavaFX controllers and views should not contain requirement-evaluation rules or file-format details.
 
+The requirements UI uses `RequirementDialog` for both root and child creation.
+`RequirementsPanel` owns root insertion and tree refresh, while
+`RequirementDetailsPanel` owns child insertion for the selected composite.
+`MainWindow` coordinates persistence after either mutation.
+
 ## Persistence direction
 
 Application data should eventually be stored in JSON in the same directory as the packaged executable. The storage location should be resolved by an infrastructure component rather than hard-coded in the UI.

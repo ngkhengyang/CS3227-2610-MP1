@@ -34,6 +34,7 @@ public final class MainWindow extends Application {
     private ModulesManager modulesManager;
     private RequirementsManager requirementsManager;
     private ApplicationData applicationData;
+    private RequirementsPanel requirementsPanel;
 
     /** Creates the main window using the default application data file. */
     public MainWindow() {
@@ -52,9 +53,12 @@ public final class MainWindow extends Application {
         BorderPane root = new BorderPane();
         root.setTop(new ApplicationToolbar(this::saveApplicationData, stage::close));
 
-        RequirementDetailsPanel requirementDetailsPanel = new RequirementDetailsPanel();
-        RequirementsPanel requirementsPanel = new RequirementsPanel(
-                requirementsManager, requirementDetailsPanel::setRequirement);
+        RequirementDetailsPanel requirementDetailsPanel = new RequirementDetailsPanel(
+                requirementsManager, this::handleRequirementsChanged);
+        requirementsPanel = new RequirementsPanel(
+                requirementsManager,
+                requirementDetailsPanel::setRequirement,
+                this::handleRequirementsChanged);
         requirementsPanel.prefWidthProperty().bind(
                 root.widthProperty().multiply(REQUIREMENTS_PANEL_WIDTH_RATIO));
         root.setLeft(requirementsPanel);
@@ -70,6 +74,13 @@ public final class MainWindow extends Application {
         stage.setMinHeight(INITIAL_HEIGHT);
         stage.setScene(scene);
         stage.show();
+    }
+
+    private void handleRequirementsChanged() {
+        if (requirementsPanel != null) {
+            requirementsPanel.refresh();
+        }
+        saveApplicationData();
     }
 
     private void initialiseApplicationData() {

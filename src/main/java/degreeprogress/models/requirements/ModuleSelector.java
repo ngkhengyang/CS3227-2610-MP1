@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import degreeprogress.models.modules.Module;
+import degreeprogress.models.modules.ModuleCode;
 
 /**
  * Describes which completed modules contribute to a requirement.
@@ -23,8 +24,8 @@ public final class ModuleSelector {
             Set<String> codePrefixes,
             Integer minimumLevel,
             Integer maximumLevel) {
-        this.moduleCodes = normalize(moduleCodes);
-        this.codePrefixes = normalize(codePrefixes);
+        this.moduleCodes = normalizeModuleCodes(moduleCodes);
+        this.codePrefixes = normalizePrefixes(codePrefixes);
         if (minimumLevel != null && minimumLevel < 0) {
             throw new IllegalArgumentException("Minimum level must not be negative");
         }
@@ -94,14 +95,31 @@ public final class ModuleSelector {
         return Objects.hash(moduleCodes, codePrefixes, minimumLevel, maximumLevel);
     }
 
-    private static Set<String> normalize(Set<String> values) {
+    private static Set<String> normalizeModuleCodes(Set<String> values) {
+        Set<String> result = new HashSet<>();
+        for (String value : values == null ? Set.<String>of() : values) {
+            result.add(new ModuleCode(value).value());
+        }
+        return Set.copyOf(result);
+    }
+
+    private static Set<String> normalizePrefixes(Set<String> values) {
         Set<String> result = new HashSet<>();
         for (String value : values == null ? Set.<String>of() : values) {
             if (value == null || value.isBlank()) {
-                throw new IllegalArgumentException("Selector values must not be blank");
+                throw new IllegalArgumentException("Module prefixes must not be blank");
             }
-            result.add(value.trim().toUpperCase(Locale.ROOT));
+            String normalized = value.trim().toUpperCase(Locale.ROOT);
+            if (normalized.chars().anyMatch(character -> !isAsciiLetter(character))) {
+                throw new IllegalArgumentException("Module prefixes must contain letters only");
+            }
+            result.add(normalized);
         }
         return Set.copyOf(result);
+    }
+
+    private static boolean isAsciiLetter(int character) {
+        return character >= 'A' && character <= 'Z'
+                || character >= 'a' && character <= 'z';
     }
 }

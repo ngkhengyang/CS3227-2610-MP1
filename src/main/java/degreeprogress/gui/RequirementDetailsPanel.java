@@ -2,14 +2,19 @@ package degreeprogress.gui;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 import javafx.geometry.Insets;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.Window;
 
+import degreeprogress.managers.RequirementsManager;
 import degreeprogress.models.requirements.AllOfRequirement;
 import degreeprogress.models.requirements.AnyOfRequirement;
 import degreeprogress.models.requirements.CompositeRequirement;
@@ -26,19 +31,43 @@ public final class RequirementDetailsPanel extends VBox {
     private static final double HEADER_SPACING = 12;
     private static final double FIELD_SPACING = 4;
 
+    private final RequirementsManager requirementsManager;
+    private final Runnable requirementsChangedAction;
     private final Label title;
+    private final Button addChildButton;
     private final Button editButton;
     private final VBox details;
+    private Requirement selectedRequirement;
 
     /** Creates an empty requirement details panel. */
     public RequirementDetailsPanel() {
+        this(null, () -> { });
+    }
+
+    /**
+     * Creates a requirement details panel that can add children to composite requirements.
+     *
+     * @param requirementsManager manager containing the requirements to edit
+     * @param requirementsChangedAction action to run after a child is added
+     */
+    public RequirementDetailsPanel(
+            RequirementsManager requirementsManager,
+            Runnable requirementsChangedAction) {
+        this.requirementsManager = requirementsManager;
+        this.requirementsChangedAction = Objects.requireNonNull(requirementsChangedAction);
+
         title = new Label("Requirement details");
         title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+
+        addChildButton = new Button("Add child");
+        addChildButton.setOnAction(event -> showAddChildRequirementDialog());
+        addChildButton.setVisible(false);
+        addChildButton.setManaged(false);
 
         editButton = new Button("Edit");
         editButton.setDisable(true);
 
-        HBox header = new HBox(HEADER_SPACING, title, editButton);
+        HBox header = new HBox(HEADER_SPACING, title, addChildButton, editButton);
         HBox.setHgrow(title, Priority.ALWAYS);
 
         details = new VBox(VERTICAL_SPACING);
@@ -56,21 +85,59 @@ public final class RequirementDetailsPanel extends VBox {
      * @param requirement requirement to display
      */
     public void setRequirement(Requirement requirement) {
+        selectedRequirement = requirement;
         details.getChildren().clear();
 
         if (requirement == null) {
             title.setText("Requirement details");
+            setAddChildButtonVisible(false);
             editButton.setDisable(true);
             details.getChildren().add(new Label("Select a requirement to view its details."));
             return;
         }
 
         title.setText(requirement.getName());
+        setAddChildButtonVisible(requirement instanceof CompositeRequirement
+                && requirementsManager != null);
         editButton.setDisable(false);
         details.getChildren().add(createDetail("Type", getRequirementType(requirement)));
         details.getChildren().add(createDetail("Description", getDescription(requirement)));
         details.getChildren().add(createRequirementDetail(requirement));
         addSelectorDetails(requirement);
+    }
+
+    private void setAddChildButtonVisible(boolean visible) {
+        addChildButton.setVisible(visible);
+        addChildButton.setManaged(visible);
+    }
+
+    private void showAddChildRequirementDialog() {
+        if (!(selectedRequirement instanceof CompositeRequirement composite)
+                || requirementsManager == null) {
+            return;
+        }
+
+        Window owner = getScene() == null ? null : getScene().getWindow();
+        Optional<Requirement> child = RequirementDialog.showAndWait(owner, "Add child");
+        child.ifPresent(requirement -> addChildRequirement(composite, requirement));
+    }
+
+    private void addChildRequirement(CompositeRequirement parent, Requirement child) {
+        try {
+            requirementsManager.addChildRequirement(parent.getId(), child);
+            requirementsChangedAction.run();
+            setRequirement(parent);
+        } catch (IllegalArgumentException exception) {
+            showError("Could not add child requirement", exception.getMessage());
+        }
+    }
+
+    private void showError(String errorTitle, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(errorTitle);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     private VBox createDetail(String labelText, String valueText) {

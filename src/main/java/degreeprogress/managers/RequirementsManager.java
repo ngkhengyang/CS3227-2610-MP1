@@ -49,8 +49,7 @@ public final class RequirementsManager {
         if (requirement == null) {
             throw new IllegalArgumentException("Requirement must not be null");
         }
-        if (requirements.stream()
-                .anyMatch(existing -> existing.getId().equals(requirement.getId()))) {
+        if (containsRequirementId(requirement.getId())) {
             throw new IllegalArgumentException(
                     "A requirement with this id already exists: " + requirement.getId());
         }

@@ -6,9 +6,9 @@ import java.util.Objects;
 /**
  * The normalized identity of a module and the information derived from it.
  *
- * <p>A module code consists of a leading alphabetic prefix followed by at
- * least one digit. Any trailing suffix is retained as part of the code. For
- * example, {@code CS2040S} has prefix {@code CS} and level {@code 2000}.</p>
+ * <p>A module code consists of a leading alphabetic prefix, a numeric level,
+ * and an optional alphabetic suffix. For example, {@code CS2040S} has prefix
+ * {@code CS} and level {@code 2000}.</p>
  */
 public record ModuleCode(String value) {
     /** Creates a normalized module code after validating its prefix and level. */
@@ -18,6 +18,12 @@ public record ModuleCode(String value) {
         }
 
         String normalized = value.trim().toUpperCase(Locale.ROOT);
+        for (int index = 0; index < normalized.length(); index++) {
+            char character = normalized.charAt(index);
+            if (!isAsciiLetter(character) && !isAsciiDigit(character)) {
+                throw new IllegalArgumentException("Module code must contain only letters and numbers");
+            }
+        }
         int firstDigit = firstDigitIndex(normalized);
         if (firstDigit == 0) {
             throw new IllegalArgumentException("Module code must start with a prefix");
@@ -26,9 +32,20 @@ public record ModuleCode(String value) {
             throw new IllegalArgumentException("Module code must contain a level digit");
         }
         for (int index = 0; index < firstDigit; index++) {
-            if (!Character.isLetter(normalized.charAt(index))) {
+            if (!isAsciiLetter(normalized.charAt(index))) {
                 throw new IllegalArgumentException("Module code prefix must contain letters only");
             }
+        }
+        int suffixStart = firstDigit;
+        while (suffixStart < normalized.length() && isAsciiDigit(normalized.charAt(suffixStart))) {
+            suffixStart++;
+        }
+        while (suffixStart < normalized.length() && isAsciiLetter(normalized.charAt(suffixStart))) {
+            suffixStart++;
+        }
+        if (suffixStart != normalized.length()) {
+            throw new IllegalArgumentException(
+                    "Module code must have letters followed by a number and optional suffix letters");
         }
         value = normalized;
     }
@@ -59,10 +76,19 @@ public record ModuleCode(String value) {
 
     private static int firstDigitIndex(String code) {
         for (int index = 0; index < code.length(); index++) {
-            if (Character.isDigit(code.charAt(index))) {
+            if (isAsciiDigit(code.charAt(index))) {
                 return index;
             }
         }
         return -1;
+    }
+
+    private static boolean isAsciiLetter(char character) {
+        return character >= 'A' && character <= 'Z'
+                || character >= 'a' && character <= 'z';
+    }
+
+    private static boolean isAsciiDigit(char character) {
+        return character >= '0' && character <= '9';
     }
 }

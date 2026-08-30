@@ -42,6 +42,19 @@ class RequirementsManagerTest {
     }
 
     @Test
+    void addRequirement_duplicateNestedId_rejectsAddition() {
+        Requirement child = new ModuleRequirement(
+                "child", "Child", "", Set.of("CS1231S"));
+        AllOfRequirement parent = new AllOfRequirement(
+                "parent", "Parent", "", List.of(child));
+        RequirementsManager manager = new RequirementsManager(List.of(parent));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> manager.addRequirement(new ModuleRequirement(
+                        "child", "Different child", "", Set.of("CS2040S"))));
+    }
+
+    @Test
     void addRequirement_rejectsNull() {
         RequirementsManager manager = new RequirementsManager();
 
