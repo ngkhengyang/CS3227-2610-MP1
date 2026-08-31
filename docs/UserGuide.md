@@ -18,6 +18,20 @@ requirement**) is selected, use **Add child** in the requirement details panel
 to add a nested requirement using the same form. Changes are saved to the
 application data file after a requirement is added or edited.
 
+During evaluation, completed modules are matched to specific requirements first.
+Modules listed in **Specific modules** requirements are reserved from broad
+module-count and unit-count requirements. A module is reused only when it is
+explicitly listed in each **Specific modules** requirement that receives it.
+Other completed modules are allocated to one specific requirement at a time;
+modules not selected for any specific requirement are automatically counted as
+unrestricted electives. The minimum unrestricted-elective units can be changed
+by editing the **Unrestricted Electives** unit-count requirement.
+The requirement details view lists the modules credited to the selected
+requirement. A leaf lists only its own matching modules, while a composite
+lists the union of modules credited to its child requirements. For **Degree
+Total**, the view explains that all completed modules are observed without
+being reserved.
+
 Select any requirement and use the trash icon in the requirement details panel
 to delete it. Deleting a composite requirement also deletes all of its child
 requirements. Deletion must be confirmed before it is applied.

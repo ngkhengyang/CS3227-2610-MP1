@@ -96,6 +96,27 @@ class RequirementsSerializerTest {
     }
 
     @Test
+    void serializeAndParse_unrestrictedElectiveMinimumPreserved() {
+        UnitCountRequirement unrestrictedElectives = new UnitCountRequirement(
+                "unrestricted-electives",
+                "Unrestricted Electives",
+                "",
+                null,
+                48);
+        RequirementDocument original = new RequirementDocument(
+                1,
+                new ProgrammeInfo("test", "Test Programme", "TEST", 160, List.of()),
+                List.of(),
+                List.of(unrestrictedElectives));
+
+        RequirementDocument parsed = serializer.parse(serializer.serialize(original));
+
+        UnitCountRequirement parsedRequirement = (UnitCountRequirement) parsed.requirements().get(0);
+        assertEquals(48, parsedRequirement.getMinimumUnits());
+        assertEquals("unrestricted-electives", parsedRequirement.getId());
+    }
+
+    @Test
     void parse_rejectsMalformedJsonOrUnknownType() {
         assertThrows(IllegalArgumentException.class, () -> serializer.parse("not json"));
 

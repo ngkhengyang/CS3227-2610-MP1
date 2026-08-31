@@ -297,7 +297,7 @@
           "type": "unitCount",
           "id": "unrestricted-electives",
           "name": "Unrestricted Electives",
-          "description": "At least 40 units. The first iteration treats allocation to this pool as a future manual-allocation feature.",
+          "description": "At least 40 units from completed modules not credited to another requirement.",
           "selector": {},
           "minimumUnits": 40
         },

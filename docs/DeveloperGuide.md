@@ -29,6 +29,25 @@ insertion and deletion for the selected requirement. Deletion is delegated to
 requirement or a descendant from its composite parent. `MainWindow` coordinates
 persistence after any mutation.
 
+Requirement evaluation is coordinated by `RequirementAllocationEngine` in the
+domain layer. It evaluates specific roots against selected completed modules.
+Module codes found in `ModuleRequirement` leaves are treated as explicit claims:
+count and unit leaves cannot reuse those codes, and non-explicit modules are
+claimed by at most one specific root. Explicit overlap is possible only when a
+module is listed in each `ModuleRequirement` that receives it. The reserved
+`unrestricted-electives` root is evaluated against the remaining completed
+modules, and the reserved `degree-total` root evaluates all completed modules
+without consuming modules. `RequirementsManager` exposes the resulting progress
+and allocation snapshot to the presentation layer.
+
+`RequirementsPanel` computes one allocation snapshot when it refreshes, so all
+completion indicators use the same matching decision. `RequirementDetailsPanel`
+uses the manager's allocation snapshot to show the modules credited to the
+selected requirement. A leaf shows only its own matching modules, while a
+composite shows the union of its descendants' allocations. Selecting
+`unrestricted-electives` shows the remainder modules. Allocation is runtime
+evaluation data and is not added to the persisted requirement JSON.
+
 ## Persistence direction
 
 Application data should eventually be stored in JSON in the same directory as the packaged executable. The storage location should be resolved by an infrastructure component rather than hard-coded in the UI.

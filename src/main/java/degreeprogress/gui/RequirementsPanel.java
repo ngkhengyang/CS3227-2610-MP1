@@ -22,6 +22,7 @@ import javafx.stage.Window;
 
 import degreeprogress.managers.ModulesManager;
 import degreeprogress.managers.RequirementsManager;
+import degreeprogress.models.requirements.EvaluationAllocation;
 import degreeprogress.models.requirements.EvaluationResult;
 import degreeprogress.models.requirements.Requirement;
 
@@ -40,6 +41,7 @@ public final class RequirementsPanel extends VBox {
     private final Runnable requirementsChangedAction;
     private final TreeView<Requirement> requirementTree;
     private final StackPane treeContainer;
+    private EvaluationAllocation evaluationAllocation;
 
     /**
      * Creates a requirements panel without a mutation callback.
@@ -119,6 +121,9 @@ public final class RequirementsPanel extends VBox {
     public void refresh() {
         String selectedRequirementId = getSelectedRequirementId();
         List<Requirement> rootRequirements = requirementsManager.getRequirements();
+        evaluationAllocation = modulesManager == null
+                ? null
+                : requirementsManager.evaluateAllocation(modulesManager.getModules());
         requirementTree.setRoot(createRequirementTree(rootRequirements));
         treeContainer.getChildren().setAll(requirementTree);
         if (rootRequirements.isEmpty()) {
@@ -237,11 +242,10 @@ public final class RequirementsPanel extends VBox {
     }
 
     private boolean isRequirementCompleted(Requirement requirement) {
-        if (modulesManager == null) {
+        if (evaluationAllocation == null) {
             return false;
         }
-        EvaluationResult result = requirementsManager.evaluateRequirement(
-                requirement.getId(), modulesManager);
+        EvaluationResult result = evaluationAllocation.findResult(requirement.getId());
         return result.fulfilled();
     }
 }

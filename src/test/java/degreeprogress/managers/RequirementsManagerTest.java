@@ -15,6 +15,7 @@ import degreeprogress.models.modules.Module;
 import degreeprogress.models.requirements.AllOfRequirement;
 import degreeprogress.models.requirements.AnyOfRequirement;
 import degreeprogress.models.requirements.DegreeProgress;
+import degreeprogress.models.requirements.EvaluationAllocation;
 import degreeprogress.models.requirements.EvaluationResult;
 import degreeprogress.models.requirements.ModuleCountRequirement;
 import degreeprogress.models.requirements.ModuleRequirement;
@@ -319,12 +320,230 @@ class RequirementsManagerTest {
         RequirementsManager manager = new RequirementsManager(List.of(first, second));
 
         List<EvaluationResult> results = manager.evaluateRequirements(
-                List.of(new Module("CS1231S", 4, true)));
+                List.of(
+                        new Module("CS1231S", 4, true),
+                        new Module("CS2040S", 4, true)));
 
         assertEquals(List.of("first", "second"),
                 results.stream().map(EvaluationResult::requirementId).toList());
         assertTrue(results.get(0).fulfilled());
         assertTrue(results.get(1).fulfilled());
+    }
+
+    @Test
+    void evaluateAllocation_specificModulesAreNotReusedByBroadSiblingRequirement() {
+        Requirement foundation = new ModuleRequirement(
+                "foundation", "Computer Science Foundation", "", Set.of("CS1231S"));
+        Requirement breadth = new UnitCountRequirement(
+                "breadth", "Computing Breadth and Depth", "",
+                new ModuleSelector(Set.of(), Set.of("CS"), null, null), 4);
+        Requirement programme = new AllOfRequirement(
+                "programme", "Programme Requirements", "", List.of(foundation, breadth));
+        RequirementsManager manager = new RequirementsManager(List.of(programme));
+
+        EvaluationAllocation allocation = manager.evaluateAllocation(List.of(
+                new Module("CS1231S", 4, true),
+                new Module("CS2040S", 4, true)));
+
+        assertTrue(allocation.findResult("programme").fulfilled());
+        assertTrue(allocation.findResult("foundation").fulfilled());
+        assertTrue(allocation.findResult("breadth").fulfilled());
+        assertEquals(Set.of("CS1231S"), allocation.creditedModuleCodesFor("foundation"));
+        assertEquals(Set.of("CS2040S"), allocation.creditedModuleCodesFor("breadth"));
+        assertEquals(
+                Set.of("CS1231S", "CS2040S"),
+                allocation.creditedModuleCodesFor("programme"));
+    }
+
+    @Test
+    void evaluateAllocation_duplicateSpecificModuleClaims_allowExplicitOverlap() {
+        Requirement first = new ModuleRequirement(
+                "first", "First", "", Set.of("CS1231S"));
+        Requirement second = new ModuleRequirement(
+                "second", "Second", "", Set.of("CS1231S"));
+        RequirementsManager manager = new RequirementsManager(List.of(first, second));
+
+        EvaluationAllocation allocation = manager.evaluateAllocation(List.of(
+                new Module("CS1231S", 4, true)));
+
+        assertTrue(allocation.findResult("first").fulfilled());
+        assertTrue(allocation.findResult("second").fulfilled());
+        assertEquals(Set.of("CS1231S"), allocation.creditedModuleCodesFor("first"));
+        assertEquals(Set.of("CS1231S"), allocation.creditedModuleCodesFor("second"));
+    }
+
+    @Test
+    void evaluateAllocation_broadRequirementsDoNotReuseNonExplicitModules() {
+        Requirement first = new UnitCountRequirement(
+                "first", "First", "", ModuleSelector.allModules(), 4);
+        Requirement second = new UnitCountRequirement(
+                "second", "Second", "", ModuleSelector.allModules(), 4);
+        RequirementsManager manager = new RequirementsManager(List.of(first, second));
+
+        EvaluationAllocation allocation = manager.evaluateAllocation(List.of(
+                new Module("CS1231S", 4, true),
+                new Module("CS2040S", 4, true)));
+
+        assertTrue(allocation.findResult("first").fulfilled());
+        assertTrue(allocation.findResult("second").fulfilled());
+        assertEquals(Set.of("CS1231S"), allocation.creditedModuleCodesFor("first"));
+        assertEquals(Set.of("CS2040S"), allocation.creditedModuleCodesFor("second"));
+    }
+
+    @Test
+    void evaluateAllocation_unrestrictedElectivesUsesUncreditedModules() {
+        Requirement idCdRequirement = new AllOfRequirement(
+                "id-cd-education",
+                "Interdisciplinary and Cross-Disciplinary Education",
+                "",
+                List.of(
+                        new UnitCountRequirement(
+                                "id-cd-total-units",
+                                "ID/CD total",
+                                "",
+                                ModuleSelector.forCodes("DTK1234", "IS1128", "DAO2703", "MNO1706X"),
+                                12,
+                                12),
+                        new ModuleCountRequirement(
+                                "id-course-count",
+                                "At least two ID courses",
+                                "",
+                                ModuleSelector.forCodes("DTK1234", "IS1128"),
+                                2),
+                        new ModuleCountRequirement(
+                                "cd-course-count",
+                                "At most one CD course",
+                                "",
+                                ModuleSelector.forCodes("DAO2703", "MNO1706X"),
+                                0,
+                                1)));
+        Requirement unrestrictedElectives = new UnitCountRequirement(
+                "unrestricted-electives",
+                "Unrestricted Electives",
+                "",
+                ModuleSelector.allModules(),
+                4);
+        Requirement degreeTotal = new UnitCountRequirement(
+                "degree-total", "Degree Total", "", ModuleSelector.allModules(), 16);
+        RequirementsManager manager = new RequirementsManager(
+                List.of(idCdRequirement, unrestrictedElectives, degreeTotal));
+        List<Module> modules = List.of(
+                new Module("DTK1234", 4, true),
+                new Module("IS1128", 4, true),
+                new Module("DAO2703", 4, true),
+                new Module("MNO1706X", 4, true));
+
+        EvaluationAllocation allocation = manager.evaluateAllocation(modules);
+
+        assertEquals(
+                List.of("id-cd-education", "unrestricted-electives", "degree-total"),
+                allocation.requirementResults().stream()
+                        .map(EvaluationResult::requirementId)
+                        .toList());
+        assertTrue(allocation.findResult("id-cd-education").fulfilled());
+        assertTrue(allocation.findResult("id-course-count").fulfilled());
+        assertEquals(1, allocation.findResult("cd-course-count").achieved());
+        assertEquals(
+                Set.of("DTK1234", "IS1128", "DAO2703"),
+                allocation.creditedModuleCodesByRoot().get("id-cd-education"));
+        assertEquals(
+                Set.of("DTK1234", "IS1128", "DAO2703"),
+                allocation.creditedModuleCodesFor("id-cd-education"));
+        assertEquals(
+                Set.of("DTK1234", "IS1128"),
+                allocation.creditedModuleCodesFor("id-course-count"));
+        assertEquals(
+                Set.of("DAO2703"),
+                allocation.creditedModuleCodesFor("cd-course-count"));
+        assertEquals(Set.of("MNO1706X"), allocation.unrestrictedElectiveModuleCodes());
+        assertTrue(allocation.findResult("unrestricted-electives").fulfilled());
+        assertTrue(allocation.findResult("degree-total").fulfilled());
+    }
+
+    @Test
+    void evaluateAllocation_atLeastRequirementLeavesExtraMatchingModulesForElectives() {
+        Requirement specificRequirement = new ModuleCountRequirement(
+                "specific", "Specific modules", "", ModuleSelector.allModules(), 2);
+        Requirement unrestrictedElectives = new UnitCountRequirement(
+                "unrestricted-electives",
+                "Unrestricted Electives",
+                "",
+                ModuleSelector.allModules(),
+                4);
+        RequirementsManager manager = new RequirementsManager(
+                List.of(specificRequirement, unrestrictedElectives));
+        List<Module> modules = List.of(
+                new Module("CS1231S", 4, true),
+                new Module("CS2040S", 4, true),
+                new Module("CS2100", 4, true));
+
+        EvaluationAllocation allocation = manager.evaluateAllocation(modules);
+
+        assertTrue(allocation.findResult("specific").fulfilled());
+        assertEquals(2, allocation.findResult("specific").achieved());
+        assertEquals(2, allocation.creditedModuleCodesByRoot().get("specific").size());
+        assertEquals(Set.of("CS2100"), allocation.unrestrictedElectiveModuleCodes());
+        assertTrue(allocation.findResult("unrestricted-electives").fulfilled());
+    }
+
+    @Test
+    void evaluateAllocation_multipleSpecificRoots_excludesAllCreditedModulesFromElectives() {
+        Requirement firstRequirement = new ModuleRequirement(
+                "first", "First requirement", "", Set.of("CS1231S"));
+        Requirement secondRequirement = new ModuleRequirement(
+                "second", "Second requirement", "", Set.of("CS2040S"));
+        Requirement unrestrictedElectives = new UnitCountRequirement(
+                "unrestricted-electives",
+                "Unrestricted Electives",
+                "",
+                ModuleSelector.allModules(),
+                4);
+        RequirementsManager manager = new RequirementsManager(
+                List.of(firstRequirement, secondRequirement, unrestrictedElectives));
+
+        EvaluationAllocation allocation = manager.evaluateAllocation(List.of(
+                new Module("CS1231S", 4, true),
+                new Module("CS2040S", 4, true),
+                new Module("CS2100", 4, true)));
+
+        assertEquals(Set.of("CS1231S"), allocation.creditedModuleCodesByRoot().get("first"));
+        assertEquals(Set.of("CS2040S"), allocation.creditedModuleCodesByRoot().get("second"));
+        assertEquals(Set.of("CS2100"), allocation.unrestrictedElectiveModuleCodes());
+    }
+
+    @Test
+    void evaluateAllocation_editedElectiveMinimumChangesProgress() {
+        Requirement specificRequirement = new ModuleCountRequirement(
+                "specific", "Specific modules", "", ModuleSelector.allModules(), 2);
+        Requirement unrestrictedElectives = new UnitCountRequirement(
+                "unrestricted-electives",
+                "Unrestricted Electives",
+                "",
+                ModuleSelector.allModules(),
+                8);
+        RequirementsManager manager = new RequirementsManager(
+                List.of(specificRequirement, unrestrictedElectives));
+        List<Module> modules = List.of(
+                new Module("CS1231S", 4, true),
+                new Module("CS2040S", 4, true),
+                new Module("CS2100", 4, true));
+
+        EvaluationResult result = manager.evaluateRequirement(
+                "unrestricted-electives", modules);
+
+        assertFalse(result.fulfilled());
+        assertEquals(4, result.achieved());
+        assertEquals(8, result.target());
+    }
+
+    @Test
+    void getRootRequirement_nestedRequirement_returnsContainingRoot() {
+        Requirement child = new ModuleRequirement(
+                "child", "Child", "", Set.of("CS1231S"));
+        Requirement root = new AllOfRequirement("root", "Root", "", List.of(child));
+        RequirementsManager manager = new RequirementsManager(List.of(root));
+
+        assertSame(root, manager.getRootRequirement("child"));
     }
 
     @Test
@@ -351,7 +570,7 @@ class RequirementsManagerTest {
         Requirement first = new ModuleRequirement(
                 "first", "First", "", Set.of("CS1231S"));
         Requirement second = new UnitCountRequirement(
-                "second", "Second", "", ModuleSelector.allModules(), 8);
+                "second", "Second", "", ModuleSelector.allModules(), 4);
         RequirementsManager requirementsManager = new RequirementsManager(List.of(first, second));
         ModulesManager modulesManager = new ModulesManager(List.of(
                 new Module("CS1231S", 4, true),
@@ -434,6 +653,24 @@ class RequirementsManagerTest {
         assertEquals(selector, existing.getSelector());
         assertEquals(12, existing.getMinimumUnits());
         assertEquals(20, existing.getMaximumUnits());
+    }
+
+    @Test
+    void editRequirement_unrestrictedElectives_updatesMinimumUnits() {
+        UnitCountRequirement existing = new UnitCountRequirement(
+                "unrestricted-electives",
+                "Unrestricted Electives",
+                "",
+                ModuleSelector.allModules(),
+                40);
+        RequirementsManager manager = new RequirementsManager(List.of(existing));
+        UnitCountRequirement edited = new UnitCountRequirement(
+                "unrestricted-electives", "Unrestricted Electives", "",
+                ModuleSelector.allModules(), 48);
+
+        manager.editRequirement("unrestricted-electives", edited);
+
+        assertEquals(48, existing.getMinimumUnits());
     }
 
     @Test

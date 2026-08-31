@@ -11,20 +11,23 @@ import degreeprogress.models.requirements.AllOfRequirement;
 import degreeprogress.models.requirements.AnyOfRequirement;
 import degreeprogress.models.requirements.CompositeRequirement;
 import degreeprogress.models.requirements.DegreeProgress;
-import degreeprogress.models.requirements.EvaluationContext;
+import degreeprogress.models.requirements.EvaluationAllocation;
 import degreeprogress.models.requirements.EvaluationResult;
 import degreeprogress.models.requirements.ModuleCountRequirement;
 import degreeprogress.models.requirements.ModuleRequirement;
 import degreeprogress.models.requirements.Requirement;
+import degreeprogress.models.requirements.RequirementAllocationEngine;
 import degreeprogress.models.requirements.UnitCountRequirement;
 
 /** Owns the requirements defined for the student's degree. */
 public final class RequirementsManager {
     private final List<Requirement> requirements;
+    private final RequirementAllocationEngine allocationEngine;
 
     /** Creates an empty requirements manager. */
     public RequirementsManager() {
         this.requirements = new ArrayList<>();
+        this.allocationEngine = new RequirementAllocationEngine();
     }
 
     /** Creates a manager containing the supplied preset requirements. */
@@ -42,6 +45,7 @@ public final class RequirementsManager {
             }
         }
         this.requirements = new ArrayList<>(presetRequirements);
+        this.allocationEngine = new RequirementAllocationEngine();
     }
 
     /** Adds a requirement to the manager. */
@@ -133,6 +137,25 @@ public final class RequirementsManager {
         return List.copyOf(requirements);
     }
 
+    /**
+     * Returns the root requirement containing the supplied requirement id.
+     *
+     * @param requirementId id of a root requirement or descendant
+     * @return the root requirement containing the id
+     * @throws IllegalArgumentException if the id is blank or unknown
+     */
+    public Requirement getRootRequirement(String requirementId) {
+        validateRequirementId(requirementId);
+        for (Requirement requirement : requirements) {
+            if (requirement.getId().equals(requirementId)
+                    || findRequirement(requirementId, requirement.getChildren()) != null) {
+                return requirement;
+            }
+        }
+        throw new IllegalArgumentException(
+                "No requirement exists with this id: " + requirementId);
+    }
+
     /** Evaluates one requirement against the current modules. */
     public EvaluationResult evaluateRequirement(
             String requirementId, ModulesManager modulesManager) {
@@ -151,7 +174,7 @@ public final class RequirementsManager {
             throw new IllegalArgumentException(
                     "No requirement exists with this id: " + requirementId);
         }
-        return requirement.evaluate(new EvaluationContext(modules));
+        return evaluateAllocation(modules).findResult(requirementId);
     }
 
     /** Evaluates all root requirements against the current modules. */
@@ -164,8 +187,7 @@ public final class RequirementsManager {
 
     /** Evaluates all root requirements against the supplied module snapshot. */
     public List<EvaluationResult> evaluateRequirements(Collection<Module> modules) {
-        EvaluationContext context = new EvaluationContext(modules);
-        return evaluateRequirements(context);
+        return evaluateAllocation(modules).requirementResults();
     }
 
     /** Evaluates the complete degree against the current modules. */
@@ -178,7 +200,7 @@ public final class RequirementsManager {
 
     /** Evaluates the complete degree against the supplied module snapshot. */
     public DegreeProgress evaluateDegree(Collection<Module> modules) {
-        List<EvaluationResult> results = evaluateRequirements(modules);
+        List<EvaluationResult> results = evaluateAllocation(modules).requirementResults();
         int achieved = (int) results.stream()
                 .filter(EvaluationResult::fulfilled)
                 .count();
@@ -186,10 +208,9 @@ public final class RequirementsManager {
         return new DegreeProgress(fulfilled, achieved, results.size(), results);
     }
 
-    private List<EvaluationResult> evaluateRequirements(EvaluationContext context) {
-        return requirements.stream()
-                .map(requirement -> requirement.evaluate(context))
-                .toList();
+    /** Evaluates requirements and returns their internal module allocation. */
+    public EvaluationAllocation evaluateAllocation(Collection<Module> modules) {
+        return allocationEngine.evaluate(requirements, modules);
     }
 
     private boolean containsRequirementId(String id) {

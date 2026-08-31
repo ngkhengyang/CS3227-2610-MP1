@@ -18,7 +18,7 @@ public final class ModuleRequirement extends Requirement {
 
     @Override
     protected EvaluationResult evaluateWithContext(EvaluationContext context) {
-        int achieved = context.countCompletedModules(moduleCodes);
+        int achieved = context.countCompletedModules(getId(), moduleCodes);
         return EvaluationResult.leaf(getId(), achieved == moduleCodes.size(), achieved, moduleCodes.size());
     }
 

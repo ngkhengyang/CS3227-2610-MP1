@@ -99,6 +99,19 @@ class RequirementTest {
     }
 
     @Test
+    void evaluate_moduleCountMaximumCapsCreditedModules() {
+        Requirement requirement = new ModuleCountRequirement(
+                "cd", "CD courses", "", ModuleSelector.forCodes("DAO2703", "MNO1706X"), 0, 1);
+
+        EvaluationResult result = requirement.evaluate(List.of(
+                new Module("DAO2703", 4, true),
+                new Module("MNO1706X", 4, true)));
+
+        assertTrue(result.fulfilled());
+        assertEquals(1, result.achieved());
+    }
+
+    @Test
     void evaluate_appliesUnitCountSelector() {
         Requirement requirement = new UnitCountRequirement(
                 "breadth", "Breadth", "",
@@ -106,6 +119,17 @@ class RequirementTest {
 
         assertFalse(requirement.evaluate(List.of(CS1231S, incompleteCS2040S, CS3227)).fulfilled());
         assertTrue(requirement.evaluate(List.of(CS1231S, CS2040S, CS3227)).fulfilled());
+    }
+
+    @Test
+    void evaluate_unitCountMaximumCapsCreditedUnits() {
+        Requirement requirement = new UnitCountRequirement(
+                "id-cd", "ID/CD units", "", ModuleSelector.forCodes("CS1231S", "CS2040S"), 4, 4);
+
+        EvaluationResult result = requirement.evaluate(List.of(CS1231S, CS2040S));
+
+        assertTrue(result.fulfilled());
+        assertEquals(4, result.achieved());
     }
 
     @Test

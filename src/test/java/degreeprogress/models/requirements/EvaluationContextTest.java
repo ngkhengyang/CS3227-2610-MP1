@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,21 @@ class EvaluationContextTest {
                 new Module("CS2040S", 4, false)));
 
         assertEquals(1, context.countCompletedModules(Set.of("CS1231S", "CS2040S")));
+    }
+
+    @Test
+    void scopedSummary_usesOnlyModulesVisibleToRequirement() {
+        Module foundationModule = new Module("CS1231S", 4, true);
+        Module breadthModule = new Module("CS2040S", 4, true);
+        EvaluationContext context = new EvaluationContext(
+                List.of(foundationModule, breadthModule),
+                Map.of("breadth", List.of(breadthModule)));
+
+        SelectorSummary summary = context.summarize("breadth", ModuleSelector.allModules());
+
+        assertEquals(1, summary.matchedModules());
+        assertEquals(4, summary.matchedUnits());
+        assertEquals(0, context.countCompletedModules("breadth", Set.of("CS1231S")));
     }
 
     @Test

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -19,14 +20,17 @@ import javafx.stage.Window;
 
 import degreeprogress.managers.ModulesManager;
 import degreeprogress.managers.RequirementsManager;
+import degreeprogress.models.modules.Module;
 import degreeprogress.models.requirements.AllOfRequirement;
 import degreeprogress.models.requirements.AnyOfRequirement;
 import degreeprogress.models.requirements.CompositeRequirement;
+import degreeprogress.models.requirements.EvaluationAllocation;
 import degreeprogress.models.requirements.EvaluationResult;
 import degreeprogress.models.requirements.ModuleCountRequirement;
 import degreeprogress.models.requirements.ModuleRequirement;
 import degreeprogress.models.requirements.ModuleSelector;
 import degreeprogress.models.requirements.Requirement;
+import degreeprogress.models.requirements.RequirementAllocationPolicy;
 import degreeprogress.models.requirements.UnitCountRequirement;
 
 /** Displays details and editing actions for the requirement selected in the tree. */
@@ -135,6 +139,7 @@ public final class RequirementDetailsPanel extends VBox {
         editButton.setDisable(requirementsManager == null);
         deleteButton.setDisable(requirementsManager == null);
         details.getChildren().add(createProgressDetail(requirement));
+        addAllocationDetails(requirement);
         details.getChildren().add(createDetail("Type", getRequirementType(requirement)));
         details.getChildren().add(createDetail("Description", getDescription(requirement)));
         details.getChildren().add(createRequirementDetail(requirement));
@@ -168,6 +173,49 @@ public final class RequirementDetailsPanel extends VBox {
 
         return requirementsManager.evaluateRequirement(
                 requirement.getId(), modulesManager);
+    }
+
+    private void addAllocationDetails(Requirement requirement) {
+        if (requirementsManager == null || modulesManager == null) {
+            return;
+        }
+
+        EvaluationAllocation allocation = requirementsManager.evaluateAllocation(
+                modulesManager.getModules());
+        Requirement rootRequirement = requirementsManager.getRootRequirement(requirement.getId());
+        RequirementAllocationPolicy policy = RequirementAllocationPolicy.classifyRequirement(
+                rootRequirement);
+        if (policy == RequirementAllocationPolicy.DEGREE_TOTAL) {
+            details.getChildren().add(createDetail(
+                    "Module allocation",
+                    "This requirement observes all completed modules and does not reserve any modules."));
+            return;
+        }
+
+        List<String> allocatedModules = allocation.creditedModuleCodesFor(requirement.getId())
+                .stream()
+                .sorted()
+                .map(this::formatAllocatedModule)
+                .toList();
+        if (allocatedModules.isEmpty()) {
+            allocatedModules = List.of("None");
+        }
+        String label = policy == RequirementAllocationPolicy.UNRESTRICTED_ELECTIVES
+                ? "Unrestricted-elective modules"
+                : "Modules credited to " + requirement.getName();
+        details.getChildren().add(createListDetail(label, allocatedModules));
+    }
+
+    private String formatAllocatedModule(String moduleCode) {
+        return modulesManager.getModules().stream()
+                .filter(module -> module.getCode().equals(moduleCode))
+                .findFirst()
+                .map(this::formatModule)
+                .orElse(moduleCode);
+    }
+
+    private String formatModule(Module module) {
+        return module.getCode() + " (" + module.getUnits() + " units)";
     }
 
     private double getProgress(EvaluationResult result) {

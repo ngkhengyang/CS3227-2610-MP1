@@ -1,6 +1,6 @@
 package degreeprogress.models.requirements;
 
-/** A requirement for at least, and optionally at most, N units from matching modules. */
+/** A requirement for at least, and optionally at most, N credited units from matching modules. */
 public final class UnitCountRequirement extends Requirement {
     private ModuleSelector selector;
     private int minimumUnits;
@@ -24,10 +24,10 @@ public final class UnitCountRequirement extends Requirement {
 
     @Override
     protected EvaluationResult evaluateWithContext(EvaluationContext context) {
-        int achieved = context.summarize(selector).matchedUnits();
+        int matched = context.summarize(getId(), selector).matchedUnits();
+        int achieved = maximumUnits == null ? matched : Math.min(matched, maximumUnits);
         boolean meetsMinimum = achieved >= minimumUnits;
-        boolean meetsMaximum = maximumUnits == null || achieved <= maximumUnits;
-        return EvaluationResult.leaf(getId(), meetsMinimum && meetsMaximum, achieved, minimumUnits);
+        return EvaluationResult.leaf(getId(), meetsMinimum, achieved, minimumUnits);
     }
 
     public ModuleSelector getSelector() {
@@ -46,7 +46,7 @@ public final class UnitCountRequirement extends Requirement {
         return maximumUnits;
     }
 
-    /** Sets the minimum and optional maximum number of matching units. */
+    /** Sets the minimum and optional maximum number of credited units. */
     public void setBounds(int minimumUnits, Integer maximumUnits) {
         if (minimumUnits < 0) {
             throw new IllegalArgumentException("Minimum units must not be negative");

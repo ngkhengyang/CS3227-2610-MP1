@@ -1,6 +1,6 @@
 package degreeprogress.models.requirements;
 
-/** A requirement for at least, and optionally at most, N matching modules. */
+/** A requirement for at least, and optionally at most, N credited matching modules. */
 public final class ModuleCountRequirement extends Requirement {
     private ModuleSelector selector;
     private int minimumModules;
@@ -24,10 +24,10 @@ public final class ModuleCountRequirement extends Requirement {
 
     @Override
     protected EvaluationResult evaluateWithContext(EvaluationContext context) {
-        int achieved = context.summarize(selector).matchedModules();
+        int matched = context.summarize(getId(), selector).matchedModules();
+        int achieved = maximumModules == null ? matched : Math.min(matched, maximumModules);
         boolean meetsMinimum = achieved >= minimumModules;
-        boolean meetsMaximum = maximumModules == null || achieved <= maximumModules;
-        return EvaluationResult.leaf(getId(), meetsMinimum && meetsMaximum, achieved, minimumModules);
+        return EvaluationResult.leaf(getId(), meetsMinimum, achieved, minimumModules);
     }
 
     public ModuleSelector getSelector() {
@@ -46,7 +46,7 @@ public final class ModuleCountRequirement extends Requirement {
         return maximumModules;
     }
 
-    /** Sets the minimum and optional maximum number of matching modules. */
+    /** Sets the minimum and optional maximum number of credited matching modules. */
     public void setBounds(int minimumModules, Integer maximumModules) {
         if (minimumModules < 0) {
             throw new IllegalArgumentException("Minimum modules must not be negative");
