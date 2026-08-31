@@ -12,6 +12,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -34,6 +35,7 @@ public final class ModulesPanel extends VBox {
 
     private final ModulesManager modulesManager;
     private final Runnable modulesChangedAction;
+    private final TextField searchField;
     private final VBox moduleItems;
     private final ScrollPane moduleList;
     private final StackPane listContainer;
@@ -69,6 +71,12 @@ public final class ModulesPanel extends VBox {
         HBox.setHgrow(title, Priority.ALWAYS);
         header.setAlignment(Pos.CENTER_LEFT);
 
+        searchField = new TextField();
+        searchField.setPromptText("Search by module code or name");
+        searchField.setMaxWidth(Double.MAX_VALUE);
+        searchField.textProperty().addListener(
+                (observable, oldValue, newValue) -> refresh());
+
         moduleItems = new VBox(MODULE_ITEM_SPACING);
         moduleItems.setFillWidth(true);
 
@@ -83,18 +91,22 @@ public final class ModulesPanel extends VBox {
         setSpacing(VERTICAL_SPACING);
         setPadding(new Insets(PANEL_PADDING));
         setMinWidth(MIN_PANEL_WIDTH);
-        getChildren().addAll(header, listContainer);
+        getChildren().addAll(header, searchField, listContainer);
         VBox.setVgrow(listContainer, Priority.ALWAYS);
     }
 
-    /** Refreshes the module list from the current modules manager state. */
+    /** Refreshes the visible module list using the current search term. */
     public void refresh() {
-        List<Module> modules = modulesManager.getModules();
+        String searchTerm = searchField.getText();
+        List<Module> modules = modulesManager.searchModules(searchTerm);
         moduleItems.getChildren().setAll(
                 modules.stream().map(this::createModuleItem).toList());
         listContainer.getChildren().setAll(moduleList);
         if (modules.isEmpty()) {
-            Label emptyState = new Label("No modules recorded.");
+            String emptyStateMessage = searchTerm == null || searchTerm.isBlank()
+                    ? "No modules recorded."
+                    : "No modules match your search.";
+            Label emptyState = new Label(emptyStateMessage);
             emptyState.setMaxWidth(Double.MAX_VALUE);
             emptyState.setAlignment(Pos.CENTER);
             StackPane.setAlignment(emptyState, Pos.CENTER);

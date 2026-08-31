@@ -155,15 +155,62 @@ public final class RequirementDetailsPanel extends VBox {
 
     private VBox createProgressDetail(Requirement requirement) {
         EvaluationResult result = evaluateRequirement(requirement);
-        Label progressLabel = new Label(result == null
-                ? "Progress: 0 / 0"
-                : "Progress: " + result.achieved() + " / " + result.target());
+        int target = getProgressTarget(requirement, result);
+        Label progressLabel = new Label(formatProgress(result, target, hasMinimumRequirementBeenMet(
+                requirement, result)));
         progressLabel.setStyle("-fx-font-weight: bold;");
 
-        ProgressBar progressBar = new ProgressBar(getProgress(result));
+        ProgressBar progressBar = new ProgressBar(getProgress(result, target));
         progressBar.setMaxWidth(Double.MAX_VALUE);
         progressBar.setStyle("-fx-accent: #2e7d32;");
         return new VBox(FIELD_SPACING, progressLabel, progressBar);
+    }
+
+    private String formatProgress(EvaluationResult result, int target, boolean minimumMet) {
+        if (result == null) {
+            return "Progress: 0 / 0";
+        }
+        String sufficiency = minimumMet ? " (Sufficient)" : "";
+        return "Progress: " + result.achieved() + " / " + target + sufficiency;
+    }
+
+    private int getProgressTarget(Requirement requirement, EvaluationResult result) {
+        if (requirement instanceof ModuleCountRequirement moduleCountRequirement
+                && moduleCountRequirement.getMaximumModules() != null) {
+            return moduleCountRequirement.getMaximumModules();
+        }
+        if (requirement instanceof UnitCountRequirement unitCountRequirement
+                && unitCountRequirement.getMaximumUnits() != null) {
+            return unitCountRequirement.getMaximumUnits();
+        }
+        return result == null ? 0 : result.target();
+    }
+
+    private boolean hasMinimumRequirementBeenMet(Requirement requirement, EvaluationResult result) {
+        if (result == null || !hasMaximum(requirement) || !hasPositiveMinimum(requirement)) {
+            return false;
+        }
+        return result.fulfilled();
+    }
+
+    private boolean hasMaximum(Requirement requirement) {
+        if (requirement instanceof ModuleCountRequirement moduleCountRequirement) {
+            return moduleCountRequirement.getMaximumModules() != null;
+        }
+        if (requirement instanceof UnitCountRequirement unitCountRequirement) {
+            return unitCountRequirement.getMaximumUnits() != null;
+        }
+        return false;
+    }
+
+    private boolean hasPositiveMinimum(Requirement requirement) {
+        if (requirement instanceof ModuleCountRequirement moduleCountRequirement) {
+            return moduleCountRequirement.getMinimumModules() > 0;
+        }
+        if (requirement instanceof UnitCountRequirement unitCountRequirement) {
+            return unitCountRequirement.getMinimumUnits() > 0;
+        }
+        return false;
     }
 
     private EvaluationResult evaluateRequirement(Requirement requirement) {
@@ -218,14 +265,14 @@ public final class RequirementDetailsPanel extends VBox {
         return module.getCode() + " (" + module.getUnits() + " units)";
     }
 
-    private double getProgress(EvaluationResult result) {
+    private double getProgress(EvaluationResult result, int target) {
         if (result == null) {
             return 0;
         }
-        if (result.target() == 0) {
+        if (target == 0) {
             return result.fulfilled() ? 1 : 0;
         }
-        double progress = (double) result.achieved() / result.target();
+        double progress = (double) result.achieved() / target;
         return Math.max(0, Math.min(progress, 1));
     }
 
@@ -366,7 +413,7 @@ public final class RequirementDetailsPanel extends VBox {
     private VBox createRequirementDetail(Requirement requirement) {
         if (requirement instanceof ModuleRequirement moduleRequirement) {
             List<String> moduleDescriptions = sortedValues(moduleRequirement.getModuleCodes()).stream()
-                    .map(moduleCode -> "Complete: " + moduleCode)
+                    .map(this::formatRequiredModule)
                     .toList();
             return createListDetail("Requirements", moduleDescriptions);
         }
@@ -402,8 +449,17 @@ public final class RequirementDetailsPanel extends VBox {
         }
         UnitCountRequirement unitCountRequirement = (UnitCountRequirement) requirement;
         return createDetail("Requirements", formatCountRequirement(
-                    "unit", unitCountRequirement.getMinimumUnits(),
-                    unitCountRequirement.getMaximumUnits()));
+                "unit", unitCountRequirement.getMinimumUnits(),
+                unitCountRequirement.getMaximumUnits()));
+    }
+
+    private String formatRequiredModule(String moduleCode) {
+        return isCompletedModule(moduleCode) ? moduleCode + " (Completed)" : moduleCode;
+    }
+
+    private boolean isCompletedModule(String moduleCode) {
+        return modulesManager != null && modulesManager.getModules().stream()
+                .anyMatch(module -> module.getCode().equals(moduleCode) && module.isCompleted());
     }
 
     private void addSelectorDetails(Requirement requirement) {
