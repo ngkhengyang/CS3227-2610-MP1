@@ -1,0 +1,43 @@
+@startuml degree-progress-architecture
+title Degree Progress Tracker - architectural design
+left to right direction
+!pragma layout smetana
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+
+actor Student
+
+package "Presentation layer" {
+    [MainWindow / JavaFX UI] as presentation
+}
+
+package "Application layer" {
+    [ModulesManager] as modulesManager
+    [RequirementsManager] as requirementsManager
+}
+
+package "Domain layer" {
+    [Module models] as moduleModel
+    [Requirement models] as requirementModel
+    [Progress evaluation] as evaluation
+}
+
+package "Persistence layer" {
+    [StorageManager] as storageManager
+    database "Application data (JSON)" as dataFile
+}
+
+Student --> presentation
+
+presentation --> modulesManager
+presentation --> requirementsManager
+presentation --> storageManager : load / save
+
+modulesManager --> moduleModel
+requirementsManager --> requirementModel
+requirementsManager --> evaluation
+evaluation --> moduleModel
+evaluation --> requirementModel
+storageManager --> dataFile
+
+@enduml
