@@ -8,6 +8,16 @@ group = 'degreeprogress'
 version = '0.1.0-SNAPSHOT'
 description = 'Editable degree-progress tracker for NUS Computing students'
 
+def javafxVersion = '25.0.2'
+def releasePlatform = providers.gradleProperty('javafxPlatform').orElse('current').get()
+def supportedJavafxPlatforms = [
+    'win': 'Win',
+    'linux': 'Linux',
+    'linux-aarch64': 'LinuxAarch64',
+    'mac': 'Mac',
+    'mac-aarch64': 'MacAarch64'
+]
+
 repositories {
     mavenCentral()
 }
@@ -16,9 +26,18 @@ tasks.withType(JavaCompile).configureEach {
     options.release = 25
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
 javafx {
-    version = '21.0.8'
+    version = javafxVersion
     modules = ['javafx.controls']
+    if (releasePlatform != 'current') {
+        platform = releasePlatform
+    }
 }
 
 dependencies {
@@ -28,8 +47,71 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+def universalJavafxConfigurations = [:]
+supportedJavafxPlatforms.each { platform, suffix ->
+    String configurationName = "javafx${suffix}Runtime"
+    universalJavafxConfigurations[platform] = configurations.create(configurationName)
+    ['base', 'graphics', 'controls'].each { moduleName ->
+        dependencies.add(configurationName, [
+            group: 'org.openjfx',
+            name: "javafx-${moduleName}",
+            version: javafxVersion,
+            classifier: platform,
+            transitive: false
+        ])
+    }
+}
+
+configurations.create('universalRuntime')
+dependencies.add('universalRuntime', 'com.fasterxml.jackson.core:jackson-databind:2.19.2')
+
 application {
     mainClass = 'degreeprogress.Launcher'
+}
+
+tasks.register('releaseJar', Jar) {
+    group = 'distribution'
+    description = 'Builds a self-contained JAR for the selected JavaFX platform.'
+    archiveBaseName = 'degree-progress-tracker'
+    archiveVersion = project.version
+    archiveClassifier = releasePlatform
+    destinationDirectory = layout.projectDirectory.dir('release')
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    manifest {
+        attributes('Main-Class': application.mainClass.get())
+    }
+
+    dependsOn(tasks.named('classes'))
+    from(sourceSets.main.output)
+    from(configurations.runtimeClasspath.collect { file ->
+        file.isDirectory() ? file : zipTree(file)
+    })
+}
+
+tasks.register('universalJar', Jar) {
+    group = 'distribution'
+    description = 'Builds one JAR containing JavaFX runtimes for all supported platforms.'
+    archiveBaseName = 'degree-progress-tracker'
+    archiveVersion = project.version
+    archiveClassifier = 'universal'
+    destinationDirectory = layout.projectDirectory.dir('release')
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    manifest {
+        attributes('Main-Class': 'degreeprogress.UniversalLauncher')
+    }
+
+    dependsOn(tasks.named('classes'))
+    from(sourceSets.main.output)
+    from(configurations.universalRuntime.collect { file ->
+        file.isDirectory() ? file : zipTree(file)
+    })
+    supportedJavafxPlatforms.each { platform, suffix ->
+        into("platform/${platform}") {
+            from(universalJavafxConfigurations[platform])
+        }
+    }
 }
 
 tasks.named('test') {

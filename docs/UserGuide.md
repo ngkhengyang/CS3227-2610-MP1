@@ -1,5 +1,28 @@
 # User Guide
 
+## Setup and launch
+
+Install Java SE 25 and use the committed Gradle Wrapper. On Windows, run:
+
+```text
+gradlew.bat clean test
+gradlew.bat run
+```
+
+On macOS/Linux, use `./gradlew` instead of `gradlew.bat`. JavaFX uses native
+runtime binaries for the selected operating system. Linux systems must provide
+GTK 3.20 or later.
+
+To create the universal self-contained submission JAR:
+
+```text
+gradlew.bat clean test universalJar
+```
+
+The generated JAR is placed in `release/` and runs with Java SE 25 on supported
+Windows, Linux, and macOS systems. The application data file is created beside
+the JAR on first launch. Linux systems must provide GTK 3.20 or later.
+
 ## Current version
 
 The application opens a JavaFX window with editable requirements and module
