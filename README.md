@@ -41,7 +41,7 @@ The universal JAR is written to `release/` and can be run on supported systems
 with Java SE 25:
 
 ```text
-java -jar release/degree-progress-tracker-0.1.0-SNAPSHOT-universal.jar
+java -jar release/degree-progress-tracker.jar
 ```
 
 The universal JAR supports Windows x64, Linux x86_64 and ARM64, and macOS

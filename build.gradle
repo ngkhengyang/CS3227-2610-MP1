@@ -92,9 +92,7 @@ tasks.register('releaseJar', Jar) {
 tasks.register('universalJar', Jar) {
     group = 'distribution'
     description = 'Builds one JAR containing JavaFX runtimes for all supported platforms.'
-    archiveBaseName = 'degree-progress-tracker'
-    archiveVersion = project.version
-    archiveClassifier = 'universal'
+    archiveFileName = 'degree-progress-tracker.jar'
     destinationDirectory = layout.projectDirectory.dir('release')
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
