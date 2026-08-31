@@ -226,6 +226,9 @@ public final class RequirementDetailsPanel extends VBox {
         if (requirementsManager == null || modulesManager == null) {
             return;
         }
+        if (requirement instanceof ModuleRequirement) {
+            return;
+        }
 
         EvaluationAllocation allocation = requirementsManager.evaluateAllocation(
                 modulesManager.getModules());
