@@ -50,11 +50,7 @@ final class IconFactory {
             throw new IllegalArgumentException("Icon size must be positive and finite");
         }
 
-        SVGPath icon = new SVGPath();
-        icon.setContent(loadPathData(iconName));
-        icon.setScaleX(iconSize / SVG_VIEW_BOX_SIZE);
-        icon.setScaleY(iconSize / SVG_VIEW_BOX_SIZE);
-        icon.setStyle("-fx-fill: -fx-text-base-color;");
+        SVGPath icon = createIcon(iconName, iconSize);
 
         StackPane iconContainer = new StackPane(icon);
         iconContainer.setMinSize(iconSize, iconSize);
@@ -70,6 +66,27 @@ final class IconFactory {
         button.setAccessibleText(accessibleText);
         button.setTooltip(new Tooltip(accessibleText));
         return button;
+    }
+
+    /**
+     * Creates a bundled SVG icon at the supplied size.
+     *
+     * @param iconName name of the SVG asset without its file extension
+     * @param iconSize icon size in JavaFX logical pixels
+     * @return the SVG icon
+     * @throws IllegalArgumentException if the icon size is not positive and finite
+     */
+    static SVGPath createIcon(String iconName, double iconSize) {
+        if (!Double.isFinite(iconSize) || iconSize <= 0) {
+            throw new IllegalArgumentException("Icon size must be positive and finite");
+        }
+
+        SVGPath icon = new SVGPath();
+        icon.setContent(loadPathData(iconName));
+        icon.setScaleX(iconSize / SVG_VIEW_BOX_SIZE);
+        icon.setScaleY(iconSize / SVG_VIEW_BOX_SIZE);
+        icon.setStyle("-fx-fill: -fx-text-base-color;");
+        return icon;
     }
 
     private static double getButtonSize(double iconSize) {

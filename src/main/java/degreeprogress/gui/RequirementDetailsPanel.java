@@ -11,15 +11,18 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
 
+import degreeprogress.managers.ModulesManager;
 import degreeprogress.managers.RequirementsManager;
 import degreeprogress.models.requirements.AllOfRequirement;
 import degreeprogress.models.requirements.AnyOfRequirement;
 import degreeprogress.models.requirements.CompositeRequirement;
+import degreeprogress.models.requirements.EvaluationResult;
 import degreeprogress.models.requirements.ModuleCountRequirement;
 import degreeprogress.models.requirements.ModuleRequirement;
 import degreeprogress.models.requirements.ModuleSelector;
@@ -34,6 +37,7 @@ public final class RequirementDetailsPanel extends VBox {
     private static final double FIELD_SPACING = 4;
 
     private final RequirementsManager requirementsManager;
+    private final ModulesManager modulesManager;
     private final Runnable requirementsChangedAction;
     private final Label title;
     private final Button addChildButton;
@@ -44,7 +48,7 @@ public final class RequirementDetailsPanel extends VBox {
 
     /** Creates an empty requirement details panel. */
     public RequirementDetailsPanel() {
-        this(null, () -> { });
+        this(null, null, () -> { });
     }
 
     /**
@@ -56,7 +60,22 @@ public final class RequirementDetailsPanel extends VBox {
     public RequirementDetailsPanel(
             RequirementsManager requirementsManager,
             Runnable requirementsChangedAction) {
+        this(requirementsManager, null, requirementsChangedAction);
+    }
+
+    /**
+     * Creates a requirement details panel that displays progress using the supplied managers.
+     *
+     * @param requirementsManager manager containing the requirements to edit and evaluate
+     * @param modulesManager manager containing the modules used for progress evaluation
+     * @param requirementsChangedAction action to run after a requirement is mutated
+     */
+    public RequirementDetailsPanel(
+            RequirementsManager requirementsManager,
+            ModulesManager modulesManager,
+            Runnable requirementsChangedAction) {
         this.requirementsManager = requirementsManager;
+        this.modulesManager = modulesManager;
         this.requirementsChangedAction = Objects.requireNonNull(requirementsChangedAction);
 
         title = new Label("Requirement details");
@@ -115,10 +134,51 @@ public final class RequirementDetailsPanel extends VBox {
                 && requirementsManager != null);
         editButton.setDisable(requirementsManager == null);
         deleteButton.setDisable(requirementsManager == null);
+        details.getChildren().add(createProgressDetail(requirement));
         details.getChildren().add(createDetail("Type", getRequirementType(requirement)));
         details.getChildren().add(createDetail("Description", getDescription(requirement)));
         details.getChildren().add(createRequirementDetail(requirement));
         addSelectorDetails(requirement);
+    }
+
+    /** Refreshes the selected requirement's details and progress. */
+    public void refresh() {
+        if (selectedRequirement != null) {
+            setRequirement(selectedRequirement);
+        }
+    }
+
+    private VBox createProgressDetail(Requirement requirement) {
+        EvaluationResult result = evaluateRequirement(requirement);
+        Label progressLabel = new Label(result == null
+                ? "Progress: 0 / 0"
+                : "Progress: " + result.achieved() + " / " + result.target());
+        progressLabel.setStyle("-fx-font-weight: bold;");
+
+        ProgressBar progressBar = new ProgressBar(getProgress(result));
+        progressBar.setMaxWidth(Double.MAX_VALUE);
+        progressBar.setStyle("-fx-accent: #2e7d32;");
+        return new VBox(FIELD_SPACING, progressLabel, progressBar);
+    }
+
+    private EvaluationResult evaluateRequirement(Requirement requirement) {
+        if (requirementsManager == null || modulesManager == null) {
+            return null;
+        }
+
+        return requirementsManager.evaluateRequirement(
+                requirement.getId(), modulesManager);
+    }
+
+    private double getProgress(EvaluationResult result) {
+        if (result == null) {
+            return 0;
+        }
+        if (result.target() == 0) {
+            return result.fulfilled() ? 1 : 0;
+        }
+        double progress = (double) result.achieved() / result.target();
+        return Math.max(0, Math.min(progress, 1));
     }
 
     private void setAddChildButtonVisible(boolean visible) {

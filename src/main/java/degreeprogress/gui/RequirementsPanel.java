@@ -8,6 +8,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
@@ -16,9 +17,12 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.SVGPath;
 import javafx.stage.Window;
 
+import degreeprogress.managers.ModulesManager;
 import degreeprogress.managers.RequirementsManager;
+import degreeprogress.models.requirements.EvaluationResult;
 import degreeprogress.models.requirements.Requirement;
 
 /** Displays the configured requirements in a hierarchical tree. */
@@ -27,7 +31,10 @@ public final class RequirementsPanel extends VBox {
     private static final double PANEL_PADDING = 16;
     private static final double MIN_PANEL_WIDTH = 220;
     private static final double HEADER_SPACING = 12;
+    private static final double REQUIREMENT_CELL_SPACING = 8;
+    private static final double COMPLETION_ICON_SIZE = 16;
 
+    private final ModulesManager modulesManager;
     private final RequirementsManager requirementsManager;
     private final Consumer<Requirement> requirementSelectionAction;
     private final Runnable requirementsChangedAction;
@@ -43,7 +50,7 @@ public final class RequirementsPanel extends VBox {
     public RequirementsPanel(
             RequirementsManager requirementsManager,
             Consumer<Requirement> requirementSelectionAction) {
-        this(requirementsManager, requirementSelectionAction, () -> { });
+        this(requirementsManager, null, requirementSelectionAction, () -> { });
     }
 
     /**
@@ -57,9 +64,26 @@ public final class RequirementsPanel extends VBox {
             RequirementsManager requirementsManager,
             Consumer<Requirement> requirementSelectionAction,
             Runnable requirementsChangedAction) {
+        this(requirementsManager, null, requirementSelectionAction, requirementsChangedAction);
+    }
+
+    /**
+     * Creates a requirements panel that displays completion indicators using the supplied managers.
+     *
+     * @param requirementsManager manager containing the requirements to display
+     * @param modulesManager manager containing the modules used for completion evaluation
+     * @param requirementSelectionAction action to run when a requirement is selected
+     * @param requirementsChangedAction action to run after a requirement is mutated
+     */
+    public RequirementsPanel(
+            RequirementsManager requirementsManager,
+            ModulesManager modulesManager,
+            Consumer<Requirement> requirementSelectionAction,
+            Runnable requirementsChangedAction) {
         Objects.requireNonNull(requirementsManager);
         Objects.requireNonNull(requirementSelectionAction);
         Objects.requireNonNull(requirementsChangedAction);
+        this.modulesManager = modulesManager;
         this.requirementsManager = requirementsManager;
         this.requirementSelectionAction = requirementSelectionAction;
         this.requirementsChangedAction = requirementsChangedAction;
@@ -180,8 +204,44 @@ public final class RequirementsPanel extends VBox {
             @Override
             protected void updateItem(Requirement requirement, boolean empty) {
                 super.updateItem(requirement, empty);
-                setText(empty || requirement == null ? null : requirement.getName());
+                setText(null);
+                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+                if (empty || requirement == null) {
+                    setGraphic(null);
+                    return;
+                }
+
+                Label name = new Label(requirement.getName());
+                name.setMinWidth(0);
+                name.setMaxWidth(Double.MAX_VALUE);
+                name.setWrapText(true);
+
+                HBox content = new HBox(REQUIREMENT_CELL_SPACING, name);
+                HBox.setHgrow(name, Priority.ALWAYS);
+                content.setAlignment(Pos.CENTER_LEFT);
+                content.setMaxWidth(Double.MAX_VALUE);
+
+                if (isRequirementCompleted(requirement)) {
+                    SVGPath checkIcon = IconFactory.createIcon("check", COMPLETION_ICON_SIZE);
+                    checkIcon.setStyle("-fx-fill: #2e7d32;");
+                    StackPane completedIndicator = new StackPane(checkIcon);
+                    completedIndicator.setMinSize(COMPLETION_ICON_SIZE, COMPLETION_ICON_SIZE);
+                    completedIndicator.setPrefSize(COMPLETION_ICON_SIZE, COMPLETION_ICON_SIZE);
+                    completedIndicator.setMaxSize(COMPLETION_ICON_SIZE, COMPLETION_ICON_SIZE);
+                    completedIndicator.setAccessibleText("Completed");
+                    content.getChildren().add(completedIndicator);
+                }
+                setGraphic(content);
             }
         };
+    }
+
+    private boolean isRequirementCompleted(Requirement requirement) {
+        if (modulesManager == null) {
+            return false;
+        }
+        EvaluationResult result = requirementsManager.evaluateRequirement(
+                requirement.getId(), modulesManager);
+        return result.fulfilled();
     }
 }
