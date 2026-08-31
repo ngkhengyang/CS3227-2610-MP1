@@ -52,17 +52,39 @@ public final class StorageManager {
         return dataFile;
     }
 
-    /** Loads application data or bundled default modules and requirements on first launch. */
+    /**
+     * Loads application data or bundled default modules and requirements on first launch.
+     *
+     * <p>If the existing data file is malformed or invalid, bundled defaults are returned rather
+     * than allowing the load failure to abort the application.</p>
+     *
+     * @return the loaded application data or bundled defaults
+     */
     public ApplicationData load() {
+        return loadWithStatus().applicationData();
+    }
+
+    /**
+     * Loads application data and reports whether corrupted data caused a fallback to defaults.
+     *
+     * @return the loaded data and corruption status
+     */
+    public StorageLoadResult loadWithStatus() {
         if (!Files.exists(dataFile)) {
-            return createDefaultApplicationData();
+            return new StorageLoadResult(createDefaultApplicationData(), false);
+        }
+
+        String json;
+        try {
+            json = Files.readString(dataFile, StandardCharsets.UTF_8);
+        } catch (IOException exception) {
+            throw new StorageException("Could not read application data from " + dataFile, exception);
         }
 
         try {
-            String json = Files.readString(dataFile, StandardCharsets.UTF_8);
-            return readApplicationData(objectMapper.readTree(json));
+            return new StorageLoadResult(readApplicationData(objectMapper.readTree(json)), false);
         } catch (IOException | IllegalArgumentException exception) {
-            throw new StorageException("Could not load application data from " + dataFile, exception);
+            return new StorageLoadResult(createDefaultApplicationData(), true);
         }
     }
 

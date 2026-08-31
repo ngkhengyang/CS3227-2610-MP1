@@ -14,6 +14,7 @@ import degreeprogress.models.modules.ModuleDocument;
 import degreeprogress.models.requirements.RequirementDocument;
 import degreeprogress.storage.ApplicationData;
 import degreeprogress.storage.StorageException;
+import degreeprogress.storage.StorageLoadResult;
 import degreeprogress.storage.StorageManager;
 
 /**
@@ -99,10 +100,25 @@ public final class MainWindow extends Application {
         storageManager = dataFile == null
                 ? new StorageManager()
                 : new StorageManager(dataFile);
-        applicationData = storageManager.load();
+        StorageLoadResult loadResult = storageManager.loadWithStatus();
+        applicationData = loadResult.applicationData();
+        if (loadResult.corruptedData()) {
+            showCorruptedDataWarning();
+        }
         modulesManager = new ModulesManager(applicationData.modules().modules());
         requirementsManager = new RequirementsManager(
                 applicationData.requirements().requirements());
+    }
+
+    private void showCorruptedDataWarning() {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Data file corrupted");
+        alert.setHeaderText("Could not load saved application data");
+        alert.setContentText(
+                "The data file the application tried to load is corrupted:\n"
+                        + storageManager.getDataFile()
+                        + "\nDefault modules and requirements will be loaded.");
+        alert.showAndWait();
     }
 
     private void saveApplicationData() {

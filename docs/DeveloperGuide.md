@@ -69,4 +69,12 @@ evaluation data and is not added to the persisted requirement JSON.
 
 ## Persistence direction
 
-Application data should eventually be stored in JSON in the same directory as the packaged executable. The storage location should be resolved by an infrastructure component rather than hard-coded in the UI.
+`StorageManager` stores application data in JSON in the same directory as the
+packaged executable. The storage location is resolved by the storage component
+rather than hard-coded in the UI. A missing data file loads the bundled default
+modules and requirements without creating a user data file. If the existing
+file is malformed, has missing or invalid fields, or uses an unsupported schema
+version, `StorageManager.loadWithStatus()` returns the bundled defaults with
+`corruptedData()` set to `true`. `MainWindow` displays a warning naming the
+corrupted file before continuing with the default data. Loading defaults does
+not overwrite the existing file.

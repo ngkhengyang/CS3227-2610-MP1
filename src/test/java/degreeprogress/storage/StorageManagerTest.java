@@ -60,16 +60,39 @@ class StorageManagerTest {
     }
 
     @Test
-    void load_whenDataFileIsCorrupted_reportsStorageError() throws Exception {
+    void load_whenDataFileIsCorrupted_returnsDefaultDataAndReportsCorruption() throws Exception {
         Path dataFile = temporaryDirectory.resolve("application-data.json");
         Files.writeString(dataFile, "not json");
         StorageManager storageManager = new StorageManager(dataFile);
 
-        assertThrows(StorageException.class, storageManager::load);
+        StorageLoadResult result = storageManager.loadWithStatus();
+
+        assertTrue(result.corruptedData());
+        assertEquals(22, result.applicationData().modules().modules().size());
+        assertEquals("bcomp-cs", result.applicationData().requirements().programme().id());
     }
 
     @Test
-    void load_whenSchemaVersionIsUnsupported_reportsStorageError() throws Exception {
+    void load_whenModulesFieldIsRenamed_returnsDefaultDataAndReportsCorruption() throws Exception {
+        Path dataFile = temporaryDirectory.resolve("application-data.json");
+        StorageManager storageManager = new StorageManager(dataFile);
+        storageManager.save(createApplicationData());
+
+        String serialized = Files.readString(dataFile);
+        String corrupted = serialized.replaceFirst("\"modules\"", "\"module\"");
+        Files.writeString(dataFile, corrupted);
+
+        StorageLoadResult result = storageManager.loadWithStatus();
+
+        assertTrue(result.corruptedData());
+        assertEquals(22, result.applicationData().modules().modules().size());
+        assertEquals("bcomp-cs", result.applicationData().requirements().programme().id());
+        assertEquals(corrupted, Files.readString(dataFile));
+    }
+
+    @Test
+    void load_whenSchemaVersionIsUnsupported_returnsDefaultDataAndReportsCorruption()
+            throws Exception {
         Path dataFile = temporaryDirectory.resolve("application-data.json");
         Files.writeString(dataFile, """
                 {
@@ -81,7 +104,10 @@ class StorageManagerTest {
                 """);
         StorageManager storageManager = new StorageManager(dataFile);
 
-        assertThrows(StorageException.class, storageManager::load);
+        StorageLoadResult result = storageManager.loadWithStatus();
+
+        assertTrue(result.corruptedData());
+        assertEquals(22, result.applicationData().modules().modules().size());
     }
 
     @Test
